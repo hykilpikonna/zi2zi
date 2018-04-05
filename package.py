@@ -5,7 +5,7 @@ from __future__ import absolute_import
 import argparse
 import glob
 import os
-import cPickle as pickle
+import pickle as pickle
 import random
 
 

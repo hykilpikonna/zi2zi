@@ -1,0 +1,20 @@
+1.Preprocess:
+1.1
+python font2img.py --src_font=Font/BaoMH.ttf --dst_font=Font/TongQ.ttf --charset=CN --sample_count=1000 --sample_dir=experiment3/FontImage --label=0 --filter=1 --shuffle=1
+
+1.2
+python package.py --dir=experiment3/FontImage --save_dir=experiment3/data --split_ratio=0.1
+
+2.Train
+
+python train.py --experiment_dir=experiment3 --experiment_id=3 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15
+
+3.Infer
+
+python infer.py --model_dir=experiment3/checkpoint/experiment_3_batch_16 --batch_size=16 --source_obj=experiment3/data/val.obj --embedding_ids=0 --save_dir=experiment3/infer
+
+python infer.py --model_dir=experiment/checkpoint/experiment_0_batch_16 --batch_size=16 --source_obj=FontBinary/train.obj --embedding_ids=0 --save_dir=experiment/infer --output_gif=experiment/infer --interpolate=0 --steps=10 --uroboros=1
+
+python infer.py --model_dir=experiment2/checkpoint --batch_size=16 --source_obj=FontBinary/val.obj --embedding_ids=0,1 --save_dir=experiment2/infer --output_gif=experiment2/infer --interpolate=1 --steps=10 --uroboros=1
+
+python infer.py --model_dir=experiment2/checkpoint --batch_size=16 --source_obj=FontBinary/val.obj --embedding_ids=1 --save_dir=experiment2/infer
