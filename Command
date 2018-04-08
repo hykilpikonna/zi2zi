@@ -69,6 +69,8 @@ python train.py --experiment_dir=experiment3 --experiment_id=3 --batch_size=16 -
 
 CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
 
+mv data data5
+mv data6 data
 CUDA_VISIBLE_DEVICES=1 python train.py --experiment_dir=experiment6 --experiment_id=6 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
 
 3.Infer
