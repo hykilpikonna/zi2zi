@@ -347,6 +347,17 @@ class UNet(object):
         else:
             print("fail to restore model %s" % model_dir)
 
+    def restore_pre_model(self, saver, model_dir):
+        """
+        restore the pretraind model
+        """
+        ckpt = tf.train.get_checkpoint_state(model_dir)
+        if ckpt:
+            saver.restore(self.sess, ckpt.model_checkpoint_path)
+            print("restored the pre-trainde model %s" % model_dir)
+        else:
+            print("fail to restore model %s" % model_dir)            
+
     def generate_fake_samples(self, input_images, embedding_ids):
         input_handle, loss_handle, eval_handle, summary_handle = self.retrieve_handles()
         fake_images, real_images, \
@@ -493,11 +504,10 @@ class UNet(object):
             op = tf.assign(var, val, validate_shape=False)
             self.sess.run(op)
 
-    def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, flip_labels=False,
+    def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, resume_pre_model=True, flip_labels=False,
               freeze_encoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500):
         g_vars, d_vars = self.retrieve_trainable_vars(freeze_encoder=freeze_encoder)
         input_handle, loss_handle, _, summary_handle = self.retrieve_handles()
-
         if not self.sess:
             raise Exception("no session registered")
 
@@ -521,6 +531,12 @@ class UNet(object):
         if resume:
             _, model_dir = self.get_model_id_and_dir()
             self.restore_model(saver, model_dir)
+
+        if resume_pre_model:
+            pre_saver = tf.train.Saver(g_vars)
+            _, pre_model_dir = self.get_model_id_and_dir()
+            self.restore_pre_model(pre_saver, pre_model_dir)
+            print("resume the pre-trained model.....")            
 
         current_lr = lr
         counter = 0

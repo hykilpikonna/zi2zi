@@ -27,6 +27,9 @@ parser.add_argument('--batch_size', dest='batch_size', type=int, default=16, hel
 parser.add_argument('--lr', dest='lr', type=float, default=0.001, help='initial learning rate for adam')
 parser.add_argument('--schedule', dest='schedule', type=int, default=10, help='number of epochs to half learning rate')
 parser.add_argument('--resume', dest='resume', type=int, default=1, help='resume from previous training')
+
+parser.add_argument('--resume_pre_model', dest='resume_pre_model', type=int, default=1, help='resume from pre-training')
+
 parser.add_argument('--freeze_encoder', dest='freeze_encoder', type=int, default=0,
                     help="freeze encoder weights during training")
 parser.add_argument('--fine_tune', dest='fine_tune', type=str, default=None,
@@ -60,7 +63,8 @@ def main(_):
         if args.fine_tune:
             ids = args.fine_tune.split(",")
             fine_tune_list = set([int(i) for i in ids])
-        model.train(lr=args.lr, epoch=args.epoch, resume=args.resume,
+
+        model.train(lr=args.lr, epoch=args.epoch, resume=args.resume, resume_pre_model=args.resume_pre_model,
                     schedule=args.schedule, freeze_encoder=args.freeze_encoder, fine_tune=fine_tune_list,
                     sample_steps=args.sample_steps, checkpoint_steps=args.checkpoint_steps,
                     flip_labels=args.flip_labels)
