@@ -1,35 +1,38 @@
 1.Preprocess:
 1.1
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/BaiBXZ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage1 --label=1 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/BangSX.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage2 --label=2 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/BaoMH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage3 --label=3 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/BiLJ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage4 --label=4 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/ChunFSLH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage5 --label=5 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/DengX.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage6 --label=6 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/DengXMB.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage7 --label=7 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/FengGWY.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage8 --label=8 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/GaoBQS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage9 --label=9 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/HuaKBA.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage10 --label=10 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/JingL.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage11 --label=11 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/KaiT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage12 --label=12 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/LiangL.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage13 --label=13 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/LiXKMH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage14 --label=14 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/MaoLGM.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage15 --label=15 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/MiaoWT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage16 --label=16 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/MiNJXK.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage17 --label=17 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/MoBS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage18 --label=18 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/PinSH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage19 --label=19 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/QiDXK.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage20 --label=20 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/QingCJY.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage21 --label=21 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/ShuS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage22 --label=22 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/TongQ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage23 --label=23 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/XingTCS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage24 --label=24 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/YangTT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage25 --label=25 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/YaoT.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage26 --label=26 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/YouMZ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage27 --label=27 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/YuN.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage28 --label=28 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/ZaoZGFYY.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage29 --label=29 --filter=1 --shuffle=1;
-python font2img.py --src_font=Font/FangS.TTF --dst_font=Font/ZiYHX.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage30 --label=30 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/1_BaiBXZ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage1 --label=1 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/2_BangSX.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage2 --label=2 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/3_BaoMH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage3 --label=3 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/4_BiLJ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage4 --label=4 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/5_ChunFSLH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage5 --label=5 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/6_DengX.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage6 --label=6 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/7_DengXMB.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage7 --label=7 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/8_FengGWY.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage8 --label=8 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/9_GaoBQS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage9 --label=9 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/10_HuaKBA.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage10 --label=10 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/11_JingL.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage11 --label=11 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/12_KaiT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage12 --label=12 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/13_LiangL.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage13 --label=13 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/14_LiXKMH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage14 --label=14 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/15_MaoLGM.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage15 --label=15 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/16_MiaoWT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage16 --label=16 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/17_MiNJXK.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage17 --label=17 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/18_MoBS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage18 --label=18 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/19_PinSH.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage19 --label=19 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/20_QiDXK.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage20 --label=20 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/21_QingCJY.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage21 --label=21 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/22_ShuS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage22 --label=22 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/23_TongQ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage23 --label=23 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/24_XingTCS.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage24 --label=24 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/25_YangTT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage25 --label=25 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/26_YaoT.TTF --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage26 --label=26 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/27_YouMZ.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage27 --label=27 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/28_YuN.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage28 --label=28 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/29_ZaoZGFYY.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage29 --label=29 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/30_ZiYHX.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage30 --label=30 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/31_FangZXDXJT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage31 --label=31 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/32_ShiSZHJT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage32 --label=32 --filter=1 --shuffle=1;
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font/33_YuWYBCGT.ttf --charset=CN --sample_count=2500 --sample_dir=experiment5/FontImage33 --label=33 --filter=1 --shuffle=1;
 
 1.2
 python package.py --dir=experiment5/FontImage1 --save_dir=experiment5/data1 --split_ratio=0.1
@@ -61,24 +64,54 @@ python package.py --dir=experiment5/FontImage26 --save_dir=experiment5/data26 --
 python package.py --dir=experiment5/FontImage27 --save_dir=experiment5/data27 --split_ratio=0.1;
 python package.py --dir=experiment5/FontImage28 --save_dir=experiment5/data28 --split_ratio=0.1;
 python package.py --dir=experiment5/FontImage29 --save_dir=experiment5/data29 --split_ratio=0.1;
-python package.py --dir=experiment5/FontImage30 --save_dir=experiment5/data30 --split_ratio=0.1
+python package.py --dir=experiment5/FontImage30 --save_dir=experiment5/data30 --split_ratio=0.1;
+python package.py --dir=experiment5/FontImage31 --save_dir=experiment5/data31 --split_ratio=0.1;
+python package.py --dir=experiment5/FontImage32 --save_dir=experiment5/data32 --split_ratio=0.1;
+python package.py --dir=experiment5/FontImage33 --save_dir=experiment5/data33 --split_ratio=0.1;
 
 2.Train
 
-python train.py --experiment_dir=experiment3 --experiment_id=3 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15
+cd experiment5;
+mv data data11;
+mv data12 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data12;
+mv data13 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data13;
+mv data14 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data14;
+mv data15 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=3 python train.py --experiment_dir=experiment7 --experiment_id=7 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
 
-CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
-
-mv data data5
-mv data6 data
 CUDA_VISIBLE_DEVICES=1 python train.py --experiment_dir=experiment6 --experiment_id=6 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
 
 3.Infer
 
 CUDA_VISIBLE_DEVICES=1 python infer.py --model_dir=experiment6/checkpoint/experiment_6_batch_16 --batch_size=16 --source_obj=experiment6/data/val.obj --embedding_ids=0 --save_dir=experiment6/infer
 
-python infer.py --model_dir=experiment/checkpoint/experiment_0_batch_16 --batch_size=16 --source_obj=FontBinary/train.obj --embedding_ids=0 --save_dir=experiment/infer --output_gif=experiment/infer --interpolate=0 --steps=10 --uroboros=1
+CUDA_VISIBLE_DEVICES=0 python infer2oneImg.py --model_dir=experiment6/checkpoint/experiment_6_batch_16 --batch_size=16 --source_obj=experiment6/data/val.obj --embedding_ids=0 --save_dir=experiment6/infer2oneImg
 
-python infer.py --model_dir=experiment2/checkpoint --batch_size=16 --source_obj=FontBinary/val.obj --embedding_ids=0,1 --save_dir=experiment2/infer --output_gif=experiment2/infer --interpolate=1 --steps=10 --uroboros=1
 
-python infer.py --model_dir=experiment2/checkpoint --batch_size=16 --source_obj=FontBinary/val.obj --embedding_ids=1 --save_dir=experiment2/infer
+ForTesting
+
+1.1
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font4Test/1_BenMJZ.ttf --charset=GB775 --sample_count=775 --sample_dir=experiment7/FontImageTrain --label=1 --filter=1 --shuffle=1;
+
+python font2img.py --src_font=Font/0_FangS.TTF --dst_font=Font4Test/1_BenMJZ.ttf --charset=GB6763 --sample_count=6763 --sample_dir=experiment7/FontImageVal --label=1 --filter=1 --shuffle=0;
+
+python package.py --dir=experiment7/FontImageTrain --save_dir=experiment7/dataTrain --split_ratio=0.1
+
+python package.py --dir=experiment7/FontImageVal --save_dir=experiment7/dataVal --split_ratio=1
+
+CUDA_VISIBLE_DEVICES=0 python infer2oneImg.py --model_dir=experiment6/checkpoint/experiment_6_batch_16 --batch_size=16 --source_obj=experiment6/data/val.obj --embedding_ids=0 --save_dir=experiment6/infer2oneImg
+
+CUDA_VISIBLE_DEVICES=3 python train.py --experiment_dir=experiment7 --experiment_id=7 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0

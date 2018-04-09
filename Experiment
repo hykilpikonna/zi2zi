@@ -4,18 +4,20 @@
 4.PreTraining->KaiT
 5.Train BigModel with 30 Fonts
 6.Fine-tune BigModel with BaoMH(3000) and TongQ(775)
+7.Test4TrainOn775
 
 Category Number:
+0.FangS
 1.BaiBXZ
 2.BangSX
 3.BaoMH
 4.BiLJ
 5.ChunFSLH
-6.DengX
+6.DengX(Broke)
 7.DengXMB
 8.FengGWY
 9.GaoBQS
-10.HuaKBA
+10.HuaKBA(Broke)
 11.JingL
 12.KaiT
 13.LiangL
@@ -36,3 +38,6 @@ Category Number:
 28.YuN
 29.ZaoZGFYY
 30.ZiYHX
+31.FangZXDXJT
+32.ShiSZHJT
+33.YuWYBCGT
