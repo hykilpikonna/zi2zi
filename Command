@@ -71,34 +71,60 @@ python package.py --dir=experiment5/FontImage33 --save_dir=experiment5/data33 --
 
 2.Train
 
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
 cd experiment5;
-mv data data11;
-mv data12 data;
+mv data data33;
+mv data32 data;
 cd ..;
 CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
 cd experiment5;
-mv data data12;
-mv data13 data;
+mv data data32;
+mv data31 data;
 cd ..;
 CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
 cd experiment5;
-mv data data13;
-mv data14 data;
+mv data data31;
+mv data30 data;
 cd ..;
 CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
 cd experiment5;
-mv data data14;
-mv data15 data;
+mv data data30;
+mv data29 data;
 cd ..;
-CUDA_VISIBLE_DEVICES=3 python train.py --experiment_dir=experiment7 --experiment_id=7 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
-
-CUDA_VISIBLE_DEVICES=1 python train.py --experiment_dir=experiment6 --experiment_id=6 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data29;
+mv data28 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data28;
+mv data27 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data27;
+mv data26 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data26;
+mv data25 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data25;
+mv data24 data;
+cd ..;
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment5 --experiment_id=5 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0;
+cd experiment5;
+mv data data24;
+mv data23 data;
+cd ..;
 
 3.Infer
 
-CUDA_VISIBLE_DEVICES=1 python infer.py --model_dir=experiment6/checkpoint/experiment_6_batch_16 --batch_size=16 --source_obj=experiment6/data/val.obj --embedding_ids=0 --save_dir=experiment6/infer
-
-CUDA_VISIBLE_DEVICES=0 python infer2oneImg.py --model_dir=experiment6/checkpoint/experiment_6_batch_16 --batch_size=16 --source_obj=experiment6/data/val.obj --embedding_ids=0 --save_dir=experiment6/infer2oneImg
+CUDA_VISIBLE_DEVICES=1 python infer.py --model_dir=experiment5/checkpoint/experiment_5_batch_16 --batch_size=16 --source_obj=experiment5/data/val.obj --embedding_ids=0 --save_dir=experiment5/infer
 
 
 ForTesting
@@ -114,4 +140,4 @@ python package.py --dir=experiment7/FontImageVal --save_dir=experiment7/dataVal 
 
 CUDA_VISIBLE_DEVICES=0 python infer2oneImg.py --model_dir=experiment6/checkpoint/experiment_6_batch_16 --batch_size=16 --source_obj=experiment6/data/val.obj --embedding_ids=0 --save_dir=experiment6/infer2oneImg
 
-CUDA_VISIBLE_DEVICES=3 python train.py --experiment_dir=experiment7 --experiment_id=7 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
+CUDA_VISIBLE_DEVICES=2 python train.py --experiment_dir=experiment7 --experiment_id=7 --batch_size=16 --lr=0.001 --epoch=40 --sample_steps=50 --schedule=20 --L1_penalty=100 --Lconst_penalty=15 --resume=1 --resume_pre_model=0
