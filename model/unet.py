@@ -50,6 +50,7 @@ class UNet(object):
             self.checkpoint_dir = os.path.join(self.experiment_dir, "checkpoint")
             self.sample_dir = os.path.join(self.experiment_dir, "sample")
             self.log_dir = os.path.join(self.experiment_dir, "logs")
+            self.save_dir = os.path.join(self.experiment_dir, "save_dir")
 
             if not os.path.exists(self.checkpoint_dir):
                 os.makedirs(self.checkpoint_dir)
@@ -60,6 +61,9 @@ class UNet(object):
             if not os.path.exists(self.sample_dir):
                 os.makedirs(self.sample_dir)
                 print("create sample directory")
+            if not os.path.exists(self.sample_dir):
+                os.makedirs(self.sample_dir)
+                print("create save directory")
 
     def encoder(self, images, is_training, reuse=False):
         with tf.variable_scope("generator"):
@@ -130,9 +134,9 @@ class UNet(object):
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
         e8, enc_layers = self.encoder(images, is_training=is_training, reuse=reuse)
-        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids)
+        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids) # category embedding
         local_embeddings = tf.reshape(local_embeddings, [self.batch_size, 1, 1, self.embedding_dim])
-        embedded = tf.concat([e8, local_embeddings], 3)
+        embedded = tf.concat([e8, local_embeddings], 3) # encoded character + category embedding
         output = self.decoder(embedded, enc_layers, embedding_ids, inst_norm, is_training=is_training, reuse=reuse)
         return output, e8
 
@@ -609,6 +613,7 @@ class UNet(object):
                 if counter % sample_steps == 0:
                     # sample the current model states with val data
                     self.validate_model(val_batch_iter, ei, counter)
+                    self.infer_sample(val_batch_iter, embedding_ids, counter)
 
                 if counter % checkpoint_steps == 0:
                     print("Checkpoint: save checkpoint step %d" % counter)
@@ -616,3 +621,24 @@ class UNet(object):
         # save the last checkpoint
         print("Checkpoint: last checkpoint step %d" % counter)
         self.checkpoint(saver, counter)
+
+    def infer_sample(self, val_batch_iter,embedding_ids, counter):
+
+        def save_imgs(imgs, count):
+            p = os.path.join(self.save_dir, "inferred_%04d.png" % count)
+            save_concat_images(imgs, img_path=p)
+            print("generated images saved at %s" % p)
+
+        count = 0
+        batch_buffer = list()
+        for labels, source_imgs in val_batch_iter:
+            fake_imgs = self.generate_fake_samples(source_imgs, labels)[0]
+            merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])  # scale 0-1
+            batch_buffer.append(merged_fake_images)
+            if len(batch_buffer) == 10:
+                save_imgs(batch_buffer, count)
+                batch_buffer = list()
+            count += 1
+        if batch_buffer:
+            # last batch
+            save_imgs(batch_buffer, count)

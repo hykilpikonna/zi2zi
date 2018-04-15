@@ -6,9 +6,9 @@ import argparse
 import importlib
 import json
 import os
-import pdb
 import sys
 
+import PIL
 import collections
 import numpy as np
 from PIL import Image
@@ -59,7 +59,7 @@ def draw_single_char(ch, font, canvas_size, font_pix_size=160):
     img = Image.new("RGB", (font_pix_size, font_pix_size), (255, 255, 255))
     draw = ImageDraw.Draw(img)
     draw.text((0, 0), ch, fill=(0, 0, 0), font=font)
-    return img.resize((canvas_size, canvas_size))
+    return img.resize((canvas_size, canvas_size), resample=PIL.Image.LANCZOS)
 
 
 def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes, src_pix_size, dst_pix_size):
