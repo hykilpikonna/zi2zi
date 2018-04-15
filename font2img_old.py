@@ -1,22 +1,21 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
 from __future__ import print_function
+from __future__ import absolute_import
 
 import argparse
-import importlib
-import json
-import os
-import pdb
 import sys
-
-import collections
 import numpy as np
+import os
 from PIL import Image
 from PIL import ImageDraw
 from PIL import ImageFont
+import json
+import collections
 
-# reload(sys)
-# sys.setdefaultencoding("utf-8")
+#reload(sys)
+#sys.setdefaultencoding("utf-8")
+
+import importlib
 importlib.reload(sys)
 
 CN_CHARSET = None
@@ -43,23 +42,8 @@ def load_global_charset():
 def draw_single_char(ch, font, canvas_size, x_offset, y_offset):
     img = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
     draw = ImageDraw.Draw(img)
-
     draw.text((x_offset, y_offset), ch, (0, 0, 0), font=font)
     return img
-
-
-def get_offset_size(ch, draw, font, font_pix_size):
-    pix_size = draw.textsize(ch, font=font)
-    x_offset = (font_pix_size - pix_size[0]) // 2
-    y_offset = (font_pix_size - pix_size[1]) // 2
-    return x_offset, y_offset
-
-
-def draw_single_char2(ch, font, canvas_size, font_pix_size=160):
-    img = Image.new("RGB", (font_pix_size, font_pix_size), (255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    draw.text((0, 0), ch, fill=(0, 0, 0), font=font)
-    return img.resize((canvas_size, canvas_size))
 
 
 def draw_example(ch, src_font, dst_font, canvas_size, x_offset, y_offset, filter_hashes):
@@ -90,26 +74,10 @@ def filter_recurring_hash(charset, font, canvas_size, x_offset, y_offset):
     return [rh[0] for rh in recurring_hashes]
 
 
-def get_textsize(font):
-    # size = int(150*1.0)
-    img = Image.new("RGB", (1, 1), (255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    # draw.text((0,0), '器', fill=(0, 0, 0), font=font)
-    # img.show()
-    # pdb.set_trace()
-    char_size = draw.textsize('早', font=font)
-
-    return int(max(char_size))
-
-
 def font2img(src, dst, charset, char_size, canvas_size,
              x_offset, y_offset, sample_count, sample_dir, label=0, filter_by_hash=True):
     src_font = ImageFont.truetype(src, size=char_size)
     dst_font = ImageFont.truetype(dst, size=char_size)
-    # src_font_pix_size = get_textsize(src_font)
-    # dst_font_pix_size = get_textsize(dst_font)
-    srg_imgs = draw_single_char2('成', src_font, canvas_size).show()
-    pdb.set_trace()
 
     filter_hashes = set()
     if filter_by_hash:
@@ -131,8 +99,8 @@ def font2img(src, dst, charset, char_size, canvas_size,
 
 load_global_charset()
 parser = argparse.ArgumentParser(description='Convert font to images')
-# parser.add_argument('--src_font', dest='src_font', required=True, help='path of the source font')
-# parser.add_argument('--dst_font', dest='dst_font', required=True, help='path of the target font')
+parser.add_argument('--src_font', dest='src_font', required=True, help='path of the source font')
+parser.add_argument('--dst_font', dest='dst_font', required=True, help='path of the target font')
 parser.add_argument('--filter', dest='filter', type=int, default=0, help='filter recurring characters')
 parser.add_argument('--charset', dest='charset', type=str, default='CN',
                     help='charset, can be either: CN, JP, KR , GB775, GB6763 or a one line file')
@@ -148,10 +116,6 @@ parser.add_argument('--label', dest='label', type=int, default=0, help='label as
 args = parser.parse_args()
 
 if __name__ == "__main__":
-    args.src_font = "/Users/chaopan/Downloads/written fonts/于洪亮钢笔楷书简体%28正式版%29.ttf"
-    args.dst_font = "/Users/chaopan/Downloads/written fonts/方圆硬笔行书简.ttf"
-    args.sample_dir = "dir"
-
     if args.charset in ['CN', 'JP', 'KR', 'CN_T', 'GB775', 'GB6763']:
         charset = locals().get("%s_CHARSET" % args.charset)
     else:
