@@ -38,7 +38,7 @@ parser.add_argument('--inst_norm', dest='inst_norm', type=int, default=0,
                     help='use conditional instance normalization in your model')
 parser.add_argument('--sample_steps', dest='sample_steps', type=int, default=10,
                     help='number of batches in between two samples are drawn from validation set')
-parser.add_argument('--checkpoint_steps', dest='checkpoint_steps', type=int, default=500,
+parser.add_argument('--checkpoint_steps', dest='checkpoint_steps', type=int, default=10,
                     help='number of batches in between two checkpoints')
 parser.add_argument('--flip_labels', dest='flip_labels', type=int, default=None,
                     help='whether flip training data labels or not, in fine tuning')

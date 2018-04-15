@@ -1,15 +1,17 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import print_function
 
-import tensorflow as tf
-import numpy as np
-import scipy.misc as misc
 import os
 import time
 from collections import namedtuple
+
+import numpy as np
+import scipy.misc as misc
+import tensorflow as tf
+
+from .dataset import TrainDataProvider, InjectDataProvider
 from .ops import conv2d, deconv2d, lrelu, fc, batch_norm, init_embedding, conditional_instance_norm
-from .dataset import TrainDataProvider, InjectDataProvider, NeverEndingLoopingProvider
 from .utils import scale_back, merge, save_concat_images
 
 # Auxiliary wrapper classes
@@ -356,7 +358,7 @@ class UNet(object):
             saver.restore(self.sess, ckpt.model_checkpoint_path)
             print("restored the pre-trainde model %s" % model_dir)
         else:
-            print("fail to restore model %s" % model_dir)            
+            print("fail to restore model %s" % model_dir)
 
     def generate_fake_samples(self, input_images, embedding_ids):
         input_handle, loss_handle, eval_handle, summary_handle = self.retrieve_handles()
@@ -421,7 +423,7 @@ class UNet(object):
         batch_buffer = list()
         for labels, source_imgs in source_iter:
             fake_imgs = self.generate_fake_samples(source_imgs, labels)[0]
-            merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])
+            merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])  # scale 0-1
             batch_buffer.append(merged_fake_images)
             if len(batch_buffer) == 10:
                 save_imgs(batch_buffer, count)
@@ -536,7 +538,7 @@ class UNet(object):
             pre_saver = tf.train.Saver(g_vars)
             _, pre_model_dir = self.get_model_id_and_dir()
             self.restore_pre_model(pre_saver, pre_model_dir)
-            print("resume the pre-trained model.....")            
+            print("resume the pre-trained model.....")
 
         current_lr = lr
         counter = 0

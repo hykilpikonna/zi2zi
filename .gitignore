@@ -1,5 +1,10 @@
 *.pyc
 datasets/
-experiments/
 .DS_Store
 .idea/
+paired_images/
+raw_fonts/
+checkpoint/
+experiments/data/
+experiments/
+save_dir/

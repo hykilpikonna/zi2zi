@@ -5,7 +5,7 @@ import pickle as pickle
 import numpy as np
 import random
 import os
-from .utils import pad_seq, bytes_to_file, \
+from model.utils import pad_seq, bytes_to_file, \
     read_split_image, shift_and_resize_image, normalize_image
 
 
@@ -149,3 +149,27 @@ class NeverEndingLoopingProvider(InjectDataProvider):
                 .get_random_embedding_iter(batch_size, embedding_ids)
             for labels, images in rand_iter:
                 yield labels, images
+
+
+if __name__ == '__main__':
+    import pdb
+    from scipy import misc
+    from PIL import Image
+    pkl_images = PickledImageProvider("../binary/train.obj")
+    examples = pkl_images.examples
+    print(len(examples))
+
+    b_img0 = examples[0][1] # idx, binary
+    img0 = bytes_to_file(b_img0)
+    img_A, img_B = read_split_image(img0)
+    img = Image.fromarray(np.uint8(img_A), "RGB")
+    # img.save('my.png')
+
+    # mat =  misc.imread(img0).astype(np.float)
+    # side = int(mat.shape[1] / 2)
+    # assert side * 2 == mat.shape[1]
+    # img_A = mat[:, :side]  # target
+    # img = Image.fromarray(np.uint8(img_B))
+    img.show()
+
+    pdb.set_trace()
