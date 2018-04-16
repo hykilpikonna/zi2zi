@@ -26,9 +26,9 @@ SummaryHandle = namedtuple("SummaryHandle", ["d_merged", "g_merged"])
 
 
 class UNet(object):
-    def __init__(self, experiment_dir=None, experiment_id=0, batch_size=16, input_width=256, output_width=256,
+    def __init__(self, experiment_dir=None, experiment_id=0, batch_size=32, input_width=150, output_width=150,
                  generator_dim=64, discriminator_dim=64, L1_penalty=100, Lconst_penalty=15, Ltv_penalty=0.0,
-                 Lcategory_penalty=1.0, embedding_num=50, embedding_dim=128, input_filters=3, output_filters=3):
+                 Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=3, output_filters=3):
         self.experiment_dir = experiment_dir
         self.experiment_id = experiment_id
         self.batch_size = batch_size
@@ -74,6 +74,7 @@ class UNet(object):
 
             encode_layers = dict()
 
+            # TODO: Chao - add more conv option, maxpooling
             def encode_layer(x, output_filters, layer):
                 act = lrelu(x)
                 conv = conv2d(act, output_filters=output_filters, scope="g_e%d_conv" % layer)
@@ -131,6 +132,7 @@ class UNet(object):
             d7 = decode_layer(d6, s2, self.generator_dim, layer=7, enc_layer=encoding_layers["e1"])
             d8 = decode_layer(d7, s, self.output_filters, layer=8, enc_layer=None, do_concat=False)
 
+            # TODO: Chao why not sigmoid
             output = tf.nn.tanh(d8)  # scale to (-1, 1)
             return output
 
@@ -180,6 +182,7 @@ class UNet(object):
         embedding = init_embedding(self.embedding_num, self.embedding_dim)
         fake_B, encoded_real_A = self.generator(real_A, embedding, embedding_ids, is_training=is_training,
                                                 inst_norm=inst_norm)
+        # Note: Chao - P(A, B) = P(B|A)*P(A)
         real_AB = tf.concat([real_A, real_B], 3)
         fake_AB = tf.concat([real_A, fake_B], 3)
 

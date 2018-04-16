@@ -4,18 +4,30 @@ import pdb
 import PIL
 from PIL import Image, ImageEnhance
 
+from model.preprocessing_helper import CANVAS_SIZE, CHAR_SIZE
 
-def draw_single_char(img, canvas_size, factor=1.):
-    font_pix_size = int(max(img.size) * factor)
-    bg_img = Image.new("RGB", (font_pix_size, font_pix_size), (255, 255, 255))
-    offset = ((font_pix_size - img.size[0]) // 2, (font_pix_size - img.size[1]) // 2)
+
+def draw_single_char(img, canvas_size):
+    width, height = img.size
+    factor = width * 1.0 / CHAR_SIZE
+
+    max_height = CANVAS_SIZE+30
+    if height / factor > max_height: # too long
+        img = img.crop((0,0, width, int(max_height * factor)))
+    if height / factor > CHAR_SIZE + 5:  # CANVAS_SIZE/CHAR_SIZE is a benchmark, height should be less
+        factor = height * 1.0 / CHAR_SIZE
+
+    img = img.resize((int(width / factor), int(height / factor)), resample=PIL.Image.LANCZOS)
+
+    bg_img = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
+    offset = ((canvas_size - img.size[0]) // 2, (canvas_size - img.size[1]) // 2)
     bg_img.paste(img, offset)
-    return bg_img.resize((canvas_size, canvas_size), resample=PIL.Image.LANCZOS)
+    return bg_img
 
 
 image_path = "../images/test_image.jpg"
 box_path = "../images/test_image.box"
-out_dir = "../characters/"
+out_dir = "../characters/test_image/"
 
 # Load the original image:
 img = Image.open(image_path)
@@ -41,7 +53,7 @@ with open(box_path, "r") as f:
         char_img = img.crop((x1, img.size[1] - y2, x2, img.size[1] - y1))
 
         # Leave enough space and resize to canvas_size
-        char_img = draw_single_char(char_img, canvas_size=256, factor=1.1)
+        char_img = draw_single_char(char_img, canvas_size=CANVAS_SIZE)
 
         # Add brightness
         contrast = ImageEnhance.Contrast(char_img)

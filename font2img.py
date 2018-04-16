@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import argparse
 import importlib
@@ -14,7 +12,7 @@ from PIL import ImageFont
 
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
-from model.preprocessing_helper import draw_single_char, draw_example, get_textsize
+from model.preprocessing_helper import draw_single_char, draw_example, get_textsize, CHAR_SIZE, CANVAS_SIZE
 
 importlib.reload(sys)
 
@@ -39,7 +37,7 @@ def load_global_charset():
     GB6763_CHARSET = cjk["gb6763"]
 
 
-def filter_recurring_hash(charset, font, canvas_size, font_pix_size):
+def filter_recurring_hash(charset, font, canvas_size):
     """ Some characters are missing in a given font, filter them
     by checking the recurring hashes
     """
@@ -48,7 +46,7 @@ def filter_recurring_hash(charset, font, canvas_size, font_pix_size):
     sample = _charset[:2000]
     hash_count = collections.defaultdict(int)
     for c in sample:
-        img = draw_single_char(c, font, canvas_size, font_pix_size)
+        img = draw_single_char(c, font, canvas_size)
         hash_count[hash(img.tobytes())] += 1
     recurring_hashes = filter(lambda d: d[1] > 2, hash_count.items())
     return [rh[0] for rh in recurring_hashes]
@@ -60,13 +58,11 @@ def font2img(src, dst, charset, char_size, canvas_size,
     assert os.path.isfile(dst), "dst file doesn't exist:%s" % dst
 
     src_font = ImageFont.truetype(src, size=char_size)
-    src_pix_size = get_textsize(src_font)
     dst_font = ImageFont.truetype(dst, size=char_size)
-    dst_pix_size = get_textsize(dst_font)
 
     filter_hashes = set()
     if filter_by_hash:
-        filter_hashes = set(filter_recurring_hash(charset, dst_font, canvas_size, dst_pix_size))
+        filter_hashes = set(filter_recurring_hash(charset, dst_font, canvas_size))
         print("filter hashes -> %s" % (",".join([str(h) for h in filter_hashes])))
 
     count = 0
@@ -74,7 +70,7 @@ def font2img(src, dst, charset, char_size, canvas_size,
     for c in charset:
         if count == sample_count:
             break
-        e = draw_example(c, src_font, dst_font, canvas_size, filter_hashes, src_pix_size, dst_pix_size)
+        e = draw_example(c, src_font, dst_font, canvas_size, filter_hashes)
         if e:
             e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)))
             count += 1
@@ -90,9 +86,9 @@ parser.add_argument('--filter', dest='filter', type=int, default=0, help='filter
 parser.add_argument('--charset', dest='charset', type=str, default='CN',
                     help='charset, can be either: CN, JP, KR , GB775, GB6763 or a one line file')
 parser.add_argument('--shuffle', dest='shuffle', type=int, default=True, help='shuffle a charset before processings')
-parser.add_argument('--char_size', dest='char_size', type=int, default=150, help='character size')
-parser.add_argument('--canvas_size', dest='canvas_size', type=int, default=256, help='canvas size')
-parser.add_argument('--sample_count', dest='sample_count', type=int, default=500, help='number of characters to draw')
+parser.add_argument('--char_size', dest='char_size', type=int, default=CHAR_SIZE, help='character size')
+parser.add_argument('--canvas_size', dest='canvas_size', type=int, default=CANVAS_SIZE, help='canvas size')
+parser.add_argument('--sample_count', dest='sample_count', type=int, default=5, help='number of characters to draw')
 parser.add_argument('--sample_dir', dest='sample_dir', help='directory to save examples')
 
 args = parser.parse_args()
@@ -127,3 +123,4 @@ if __name__ == "__main__":
                          args.canvas_size,
                          args.sample_count, args.sample_dir, label, args.filter)
                 label += 1
+    print("Number of fonts:", label)

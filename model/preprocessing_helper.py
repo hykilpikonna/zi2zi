@@ -7,11 +7,14 @@ from PIL import ImageDraw
 
 from .utils import save_concat_images
 
+CANVAS_SIZE = 150
+CHAR_SIZE = 120
 
-def get_offset_size(ch, draw, font, font_pix_size):
+
+def get_offset_size(ch, draw, font, canvas_size):
     pix_size = draw.textsize(ch, font=font)
-    x_offset = (font_pix_size - pix_size[0]) // 2
-    y_offset = (font_pix_size - pix_size[1]) // 2
+    x_offset = (canvas_size - pix_size[0]) // 2
+    y_offset = (canvas_size - pix_size[1]) // 2
     return x_offset, y_offset
 
 
@@ -33,11 +36,13 @@ def save_imgs(imgs, count, save_dir):
     print("generated images saved at %s" % p)
 
 
-def draw_single_char(ch, font, canvas_size, font_pix_size=160):
-    img = Image.new("RGB", (font_pix_size, font_pix_size), (255, 255, 255))
+def draw_single_char(ch, font, canvas_size):
+    img = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
     draw = ImageDraw.Draw(img)
-    draw.text((0, 0), ch, fill=(0, 0, 0), font=font)
-    return img.resize((canvas_size, canvas_size), resample=PIL.Image.LANCZOS)
+    x_offset, y_offset = get_offset_size(ch, draw, font, canvas_size)
+
+    draw.text((x_offset, y_offset), ch, fill=(0, 0, 0), font=font)
+    return img
 
 
 def draw_paired_image(src_img, dst_img, canvas_size):
@@ -50,9 +55,9 @@ def draw_paired_image(src_img, dst_img, canvas_size):
     return example_img
 
 
-def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes, src_pix_size, dst_pix_size):
-    src_img = draw_single_char(ch, src_font, canvas_size, src_pix_size)
-    dst_img = draw_single_char(ch, dst_font, canvas_size, dst_pix_size)
+def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes):
+    src_img = draw_single_char(ch, src_font, canvas_size)
+    dst_img = draw_single_char(ch, dst_font, canvas_size)
 
     # check the filter example in the hashes or not
     dst_hash = hash(dst_img.tobytes())
