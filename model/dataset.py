@@ -5,6 +5,7 @@ import pickle as pickle
 import numpy as np
 import random
 import os
+import pdb
 from model.utils import pad_seq, bytes_to_file, \
     read_split_image, shift_and_resize_image, normalize_image
 
@@ -152,8 +153,6 @@ class NeverEndingLoopingProvider(InjectDataProvider):
 
 
 if __name__ == '__main__':
-    import pdb
-    from scipy import misc
     from PIL import Image
     pkl_images = PickledImageProvider("../binary/train.obj")
     examples = pkl_images.examples
@@ -171,5 +170,3 @@ if __name__ == '__main__':
     # img_A = mat[:, :side]  # target
     # img = Image.fromarray(np.uint8(img_B))
     img.show()
-
-    pdb.set_trace()

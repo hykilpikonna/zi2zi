@@ -1,9 +1,12 @@
+import os
+
 import PIL
 import numpy as np
 from PIL import Image
 from PIL import ImageDraw
-import os
+
 from .utils import save_concat_images
+
 
 def get_offset_size(ch, draw, font, font_pix_size):
     pix_size = draw.textsize(ch, font=font)
@@ -37,6 +40,16 @@ def draw_single_char(ch, font, canvas_size, font_pix_size=160):
     return img.resize((canvas_size, canvas_size), resample=PIL.Image.LANCZOS)
 
 
+def draw_paired_image(src_img, dst_img, canvas_size):
+    assert src_img.size == (canvas_size, canvas_size)
+    assert dst_img.size == (canvas_size, canvas_size)
+
+    example_img = Image.new("RGB", (canvas_size * 2, canvas_size), (255, 255, 255))
+    example_img.paste(dst_img, (0, 0))
+    example_img.paste(src_img, (canvas_size, 0))
+    return example_img
+
+
 def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes, src_pix_size, dst_pix_size):
     src_img = draw_single_char(ch, src_font, canvas_size, src_pix_size)
     dst_img = draw_single_char(ch, dst_font, canvas_size, dst_pix_size)
@@ -46,7 +59,4 @@ def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes, src_pix_siz
     if dst_hash in filter_hashes or np.min(src_img) == 255 or np.min(dst_img) == 255:
         return None
 
-    example_img = Image.new("RGB", (canvas_size * 2, canvas_size), (255, 255, 255))
-    example_img.paste(dst_img, (0, 0))
-    example_img.paste(src_img, (canvas_size, 0))
-    return example_img
+    return draw_paired_image(src_img, dst_img, canvas_size)

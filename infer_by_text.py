@@ -3,12 +3,13 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import argparse
+from io import BytesIO
 
-import numpy as np
 import tensorflow as tf
 from PIL import ImageFont
 
-from model.preprocessing_helper import draw_single_char, get_textsize, save_imgs
+from model.dataset import get_batch_iter
+from model.preprocessing_helper import draw_single_char, get_textsize, save_imgs, draw_paired_image
 from model.unet import UNet
 from model.utils import merge, scale_back
 
@@ -48,20 +49,29 @@ def main(_):
 
         count = 0
         batch_buffer = list()
-        source_imgs = []
+        examples = []
         for ch in list(args.text):
             src_img = draw_single_char(ch, src_font, args.canvas_size, src_pix_size)
-            np_src_img = np.array(src_img, dtype=np.float32) / 255.
-            np_pair_src_img = np.concatenate([np_src_img, np_src_img], axis=2)  # 256,256,6
-            source_imgs.append(np_pair_src_img)
 
-        fake_imgs = model.generate_fake_samples(source_imgs, [args.embedding_id] * len(source_imgs))[0]
-        merged_fake_images = merge(scale_back(fake_imgs), [model.batch_size, 1])  # scale 0-1
-        batch_buffer.append(merged_fake_images)
-        if len(batch_buffer) == 10:
-            save_imgs(batch_buffer, count, args.save_dir)
-            batch_buffer = list()
-        count += 1
+            paired_img = draw_paired_image(src_img, src_img, args.canvas_size)
+
+            buffered = BytesIO()
+            paired_img.save(buffered, format="JPEG")
+
+            examples.append((args.embedding_id, buffered.getvalue()))
+        batch_iter = get_batch_iter(examples, args.batch_size, augment=False)
+
+        for _, images in batch_iter:
+            # inject specific embedding style here
+            labels = [args.embedding_id] * args.batch_size
+
+            fake_imgs = model.generate_fake_samples(images, labels)[0]
+            merged_fake_images = merge(scale_back(fake_imgs), [model.batch_size, 1])  # scale 0-1
+            batch_buffer.append(merged_fake_images)
+            if len(batch_buffer) == 10:
+                save_imgs(batch_buffer, count, args.save_dir)
+                batch_buffer = list()
+            count += 1
 
         if batch_buffer:
             # last batch
