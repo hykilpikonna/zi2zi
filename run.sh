@@ -41,8 +41,14 @@ PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
                 --experiment_id=0 \
                 --batch_size=32 \
                 --lr=0.001 \
-                --epoch=40 \
+                --epoch=2 \
                 --sample_steps=50 \
                 --schedule=20 \
                 --L1_penalty=100 \
                 --Lconst_penalty=15
+
+PYTHONPATH=. python infer.py --model_dir=experiments_finetune/checkpoint/experiment_0_batch_32 \
+                --batch_size=32 \
+                --source_obj=experiments_finetune/data/val.obj \
+                --embedding_ids=48 \
+                --save_dir=save_dir/

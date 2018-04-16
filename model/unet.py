@@ -613,7 +613,6 @@ class UNet(object):
                 if counter % sample_steps == 0:
                     # sample the current model states with val data
                     self.validate_model(val_batch_iter, ei, counter)
-                    self.infer_sample(val_batch_iter, embedding_ids, counter)
 
                 if counter % checkpoint_steps == 0:
                     print("Checkpoint: save checkpoint step %d" % counter)
@@ -621,24 +620,3 @@ class UNet(object):
         # save the last checkpoint
         print("Checkpoint: last checkpoint step %d" % counter)
         self.checkpoint(saver, counter)
-
-    def infer_sample(self, val_batch_iter,embedding_ids, counter):
-
-        def save_imgs(imgs, count):
-            p = os.path.join(self.save_dir, "inferred_%04d.png" % count)
-            save_concat_images(imgs, img_path=p)
-            print("generated images saved at %s" % p)
-
-        count = 0
-        batch_buffer = list()
-        for labels, source_imgs in val_batch_iter:
-            fake_imgs = self.generate_fake_samples(source_imgs, labels)[0]
-            merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])  # scale 0-1
-            batch_buffer.append(merged_fake_images)
-            if len(batch_buffer) == 10:
-                save_imgs(batch_buffer, count)
-                batch_buffer = list()
-            count += 1
-        if batch_buffer:
-            # last batch
-            save_imgs(batch_buffer, count)

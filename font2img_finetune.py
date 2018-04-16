@@ -6,12 +6,12 @@ from PIL import Image, ImageFont
 
 from font2img import get_textsize, draw_single_char
 
-src = "data/raw_fonts/simsun.ttf"
+src = "data/raw_fonts/SimSun.ttf"
 dst_font_img_dir = "handwriting_preparation/characters/"
 sample_dir = "data/paired_images"
 label = 47
 canvas_size = 256
-
+resample = 20
 
 def draw_example(ch, src_font, dst_img, canvas_size, src_pix_size):
     src_img = draw_single_char(ch, src_font, canvas_size, src_pix_size)
@@ -44,7 +44,8 @@ if __name__ == '__main__':
                 dst_img = Image.open(os.path.join(root, name))
                 e = draw_example(ch, src_font, dst_img, canvas_size, src_pix_size)
                 if e:
-                    e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)))
-                    count += 1
-                    if count % 100 == 0:
-                        print("processed %d chars" % count)
+                    for _ in range(resample):
+                        e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)))
+                        count += 1
+                        if count % 100 == 0:
+                            print("processed %d chars" % count)

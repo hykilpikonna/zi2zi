@@ -15,11 +15,7 @@
     * Correct your Box results, and save it. The next step will crop the image according to your corrected Box file, as training data.
     * A screenshot is here ![alt text](handwriting_preparation/screenshot/Screen Shot jTessBoxEditor.png)
 
-## 3. Enhance image
-* Run the script `preprocessing/enhance_image.py` to enhance the `test_image.jpg`
-* Enhancement is not required, but it might make your handwriting images look more similar to those generated from font file
-
-## 4. Generate paired_images
-
-
-    
+## 3. Generate paired_images
+* Generate each image for each individual character `PYTHONPATH=. python preprocessing/crop_characters.py`
+* Make sure the parameters in the scripts are right and then `cd ..; PYTHONPATH=/ python font2img_finetune.py`
+* Follw the instructions of the Finetune section in `run.sh`

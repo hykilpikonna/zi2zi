@@ -156,7 +156,7 @@ args = parser.parse_args()
 
 if __name__ == "__main__":
 
-    args.src_font = "data/raw_fonts/simsun.ttf"
+    args.src_font = "data/raw_fonts/SimSun.ttf"
     args.fonts_dir = "data/raw_fonts"
     args.sample_dir = "data/paired_images"
 
