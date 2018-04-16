@@ -4,7 +4,7 @@ import pdb
 import numpy as np
 from PIL import Image, ImageFont
 
-from font2img import get_textsize, draw_single_char
+from model.preprocessing_helper import draw_single_char, get_textsize
 
 src = "data/raw_fonts/SimSun.ttf"
 dst_font_img_dir = "handwriting_preparation/characters/"

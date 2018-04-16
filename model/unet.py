@@ -3,6 +3,7 @@ from __future__ import absolute_import
 from __future__ import print_function
 
 import os
+import pdb
 import time
 from collections import namedtuple
 
@@ -10,6 +11,7 @@ import numpy as np
 import scipy.misc as misc
 import tensorflow as tf
 
+from model.preprocessing_helper import save_imgs
 from .dataset import TrainDataProvider, InjectDataProvider
 from .ops import conv2d, deconv2d, lrelu, fc, batch_norm, init_embedding, conditional_instance_norm
 from .utils import scale_back, merge, save_concat_images
@@ -134,9 +136,9 @@ class UNet(object):
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
         e8, enc_layers = self.encoder(images, is_training=is_training, reuse=reuse)
-        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids) # category embedding
+        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids)  # category embedding
         local_embeddings = tf.reshape(local_embeddings, [self.batch_size, 1, 1, self.embedding_dim])
-        embedded = tf.concat([e8, local_embeddings], 3) # encoded character + category embedding
+        embedded = tf.concat([e8, local_embeddings], 3)  # encoded character + category embedding
         output = self.decoder(embedded, enc_layers, embedding_ids, inst_norm, is_training=is_training, reuse=reuse)
         return output, e8
 
@@ -414,28 +416,27 @@ class UNet(object):
         else:
             source_iter = source_provider.get_random_embedding_iter(self.batch_size, embedding_ids)
 
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
-        self.restore_model(saver, model_dir)
-
-        def save_imgs(imgs, count):
-            p = os.path.join(save_dir, "inferred_%04d.png" % count)
-            save_concat_images(imgs, img_path=p)
-            print("generated images saved at %s" % p)
+        self.load_model(model_dir)
 
         count = 0
         batch_buffer = list()
         for labels, source_imgs in source_iter:
             fake_imgs = self.generate_fake_samples(source_imgs, labels)[0]
+            pdb.set_trace()
             merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])  # scale 0-1
             batch_buffer.append(merged_fake_images)
             if len(batch_buffer) == 10:
-                save_imgs(batch_buffer, count)
+                save_imgs(batch_buffer, count, save_dir)
                 batch_buffer = list()
             count += 1
         if batch_buffer:
             # last batch
-            save_imgs(batch_buffer, count)
+            save_imgs(batch_buffer, count, save_dir)
+
+    def load_model(self, model_dir):
+        tf.global_variables_initializer().run()
+        saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
+        self.restore_model(saver, model_dir)
 
     def interpolate(self, source_obj, between, model_dir, save_dir, steps):
         tf.global_variables_initializer().run()
