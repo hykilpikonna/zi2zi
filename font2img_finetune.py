@@ -1,13 +1,13 @@
+import argparse
 import os
 import pdb
 
 import numpy as np
 from PIL import Image, ImageFont
 
+from handwriting_preparation.preprocessing.crop_characters import char_img_iter
 from model.preprocessing_helper import draw_single_char, CHAR_SIZE, CANVAS_SIZE
 
-src = "data/raw_fonts/SimSun.ttf"
-dst_font_img_dir = "handwriting_preparation/characters/test_image/"
 sample_dir = "data/paired_images_finetune"
 label = 47
 resample = 1
@@ -27,24 +27,35 @@ def draw_example(ch, src_font, dst_img, canvas_size):
     return example_img
 
 
+parser = argparse.ArgumentParser(description='Convert font to images')
+parser.add_argument('--src_font', default="data/raw_fonts/SimSun.ttf", help='path of the source font')
+parser.add_argument('--image_basename_path',
+                    default="handwriting_preparation/images/test_image",
+                    help='path of the handwritten image (box file should be in the same folders)')
+parser.add_argument('--embedding_id', type=int, default=47, help='embedding id')
+parser.add_argument('--sample_dir', default='data/paired_images_finetune', help='directory to save examples')
+parser.add_argument('--resample', type=int, default=1, help='sample with replacement')
+
+args = parser.parse_args()
+
 if __name__ == '__main__':
-    assert os.path.isfile(src), "src file doesn't exist:%s" % src
+    assert os.path.isfile(args.src_font), "src file doesn't exist:%s" % args.src_font
+    src_font = ImageFont.truetype(args.src_font, size=CHAR_SIZE)
+    count = 0
+
+    image_path = args.image_basename_path + ".jpg"
+    box_path = args.image_basename_path + ".box"
+
     try:
         os.makedirs(sample_dir)
     except:
         pass
 
-    src_font = ImageFont.truetype(src, size=CHAR_SIZE)
-    count = 0
-    for root, dirs, files in os.walk(dst_font_img_dir):
-        for name in files:
-            if name.endswith(".jpg"):
-                ch = name.rsplit(".jpg", 1)[0]
-                dst_img = Image.open(os.path.join(root, name))
-                e = draw_example(ch, src_font, dst_img, CANVAS_SIZE)
-                if e:
-                    for _ in range(resample):
-                        e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)))
-                        count += 1
-                        if count % 100 == 0:
-                            print("processed %d chars" % count)
+    for ch, dst_img in char_img_iter(image_path, box_path):
+        e = draw_example(ch, src_font, dst_img, CANVAS_SIZE)
+        if e:
+            for _ in range(resample):
+                e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)))
+                count += 1
+                if count % 100 == 0:
+                    print("processed %d chars" % count)

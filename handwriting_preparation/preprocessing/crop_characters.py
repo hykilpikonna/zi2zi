@@ -1,5 +1,4 @@
 import os
-import pdb
 
 import PIL
 from PIL import Image, ImageEnhance
@@ -11,9 +10,9 @@ def draw_single_char(img, canvas_size):
     width, height = img.size
     factor = width * 1.0 / CHAR_SIZE
 
-    max_height = CANVAS_SIZE+30
-    if height / factor > max_height: # too long
-        img = img.crop((0,0, width, int(max_height * factor)))
+    max_height = CANVAS_SIZE + 30
+    if height / factor > max_height:  # too long
+        img = img.crop((0, 0, width, int(max_height * factor)))
     if height / factor > CHAR_SIZE + 5:  # CANVAS_SIZE/CHAR_SIZE is a benchmark, height should be less
         factor = height * 1.0 / CHAR_SIZE
 
@@ -25,43 +24,51 @@ def draw_single_char(img, canvas_size):
     return bg_img
 
 
-image_path = "../images/test_image.jpg"
-box_path = "../images/test_image.box"
-out_dir = "../characters/test_image/"
+def char_img_iter(image_path, box_path):
+    assert os.path.isfile(image_path), "image file doesn't exist: %s" % image_path
+    assert os.path.isfile(box_path), "image box file doesn't exist %s" % box_path
 
-# Load the original image:
-img = Image.open(image_path)
+    n = 0
+    img = Image.open(image_path)
+    with open(box_path, "r") as f:
+        for line in f:
+            if n >= 156 and "test_image.jpg" in image_path: break  # custom rules, so that you don't have fix all the box results
 
-# makedir
-try:
-    os.makedirs(out_dir)
-except:
-    pass
+            ch, x1, y1, x2, y2, _ = line.rstrip().split(' ')
+            x1 = int(x1)
+            y1 = int(y1)
+            x2 = int(x2)
+            y2 = int(y2)
 
-n = 0
-with open(box_path, "r") as f:
-    for line in f:
-        if n >= 156: break  # custom rules, so that you don't have fix all the box results
+            # Crop the character based on Box result
+            char_img = img.crop((x1, img.size[1] - y2, x2, img.size[1] - y1))
 
-        char, x1, y1, x2, y2, _ = line.rstrip().split(' ')
-        x1 = int(x1)
-        y1 = int(y1)
-        x2 = int(x2)
-        y2 = int(y2)
+            # Leave enough space and resize to canvas_size
+            char_img = draw_single_char(char_img, canvas_size=CANVAS_SIZE)
 
-        # Crop the character based on Box result
-        char_img = img.crop((x1, img.size[1] - y2, x2, img.size[1] - y1))
+            # Add brightness
+            contrast = ImageEnhance.Contrast(char_img)
+            char_img = contrast.enhance(2.)
 
-        # Leave enough space and resize to canvas_size
-        char_img = draw_single_char(char_img, canvas_size=CANVAS_SIZE)
+            # Add brightness
+            brightness = ImageEnhance.Brightness(char_img)
+            char_img = brightness.enhance(2.)
 
-        # Add brightness
-        contrast = ImageEnhance.Contrast(char_img)
-        char_img = contrast.enhance(2.)
+            yield ch, char_img
+            n += 1
 
-        # Add brightness
-        brightness = ImageEnhance.Brightness(char_img)
-        char_img = brightness.enhance(2.)
 
-        char_img.save(os.path.join(out_dir, char + ".jpg"), "JPEG", quality=100)
-        n += 1
+if __name__ == '__main__':
+    image_path = "../images/test_image.jpg"
+    box_path = "../images/test_image.box"
+    out_dir = "../characters/test_image/"
+
+    # makedir
+    try:
+        os.makedirs(out_dir)
+    except:
+        pass
+
+    # For debug only
+    for ch, char_img in char_img_iter(image_path, box_path):
+        char_img.save(os.path.join(out_dir, ch + ".jpg"), "JPEG", quality=100)

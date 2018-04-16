@@ -16,6 +16,5 @@
     * A screenshot is here ![alt text](handwriting_preparation/screenshot/Screen Shot jTessBoxEditor.png)
 
 ## 3. Generate paired_images
-* Generate each image for each individual character `PYTHONPATH=. python preprocessing/crop_characters.py`
 * Make sure the parameters in the scripts are right and then `cd ..; PYTHONPATH=/ python font2img_finetune.py`
 * Follw the instructions of the Finetune section in `run.sh`

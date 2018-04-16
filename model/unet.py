@@ -569,7 +569,6 @@ class UNet(object):
                 counter += 1
                 labels, batch_images = batch
                 shuffled_ids = labels[:]
-                pdb.set_trace()
                 if flip_labels:
                     np.random.shuffle(shuffled_ids)
                 # Optimize D
