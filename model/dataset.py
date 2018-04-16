@@ -1,11 +1,13 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from __future__ import absolute_import
-import pickle as pickle
-import numpy as np
-import random
+from __future__ import print_function
+
 import os
-import pdb
+import pickle as pickle
+import random
+
+import numpy as np
+
 from model.utils import pad_seq, bytes_to_file, \
     read_split_image, shift_and_resize_image, normalize_image
 
@@ -32,7 +34,7 @@ class PickledImageProvider(object):
             return examples
 
 
-def get_batch_iter(examples, batch_size, augment):
+def get_batch_iter(examples, batch_size, augment, embedding_id=None):
     # the transpose ops requires deterministic
     # batch size, thus comes the padding
     padded = pad_seq(examples, batch_size)
@@ -70,7 +72,26 @@ def get_batch_iter(examples, batch_size, augment):
             # stack into tensor
             yield labels, np.array(processed).astype(np.float32)
 
-    return batch_iter()
+    def batch_iter_with_filter():
+        labels, processed = [], []
+        for i in range(len(examples)):
+            if examples[i][0] == embedding_id:
+                labels.append(embedding_id)
+                processed.append(process(examples[i][1]))
+            else:
+                continue
+
+            if len(labels) == batch_size:
+                yield labels, np.array(processed).astype(np.float32)
+                labels, processed = [], []
+        if labels:
+
+            yield labels, np.array(processed).astype(np.float32)
+
+    if embedding_id is None:
+        return batch_iter()
+    else:
+        return batch_iter_with_filter()
 
 
 class TrainDataProvider(object):
@@ -124,7 +145,7 @@ class InjectDataProvider(object):
 
     def get_single_embedding_iter(self, batch_size, embedding_id):
         examples = self.data.examples[:]
-        batch_iter = get_batch_iter(examples, batch_size, augment=False)
+        batch_iter = get_batch_iter(examples, batch_size, augment=False, embedding_id = embedding_id)
         for _, images in batch_iter:
             # inject specific embedding style here
             labels = [embedding_id] * batch_size
@@ -154,11 +175,12 @@ class NeverEndingLoopingProvider(InjectDataProvider):
 
 if __name__ == '__main__':
     from PIL import Image
+
     pkl_images = PickledImageProvider("../binary/train.obj")
     examples = pkl_images.examples
     print(len(examples))
 
-    b_img0 = examples[0][1] # idx, binary
+    b_img0 = examples[0][1]  # idx, binary
     img0 = bytes_to_file(b_img0)
     img_A, img_B = read_split_image(img0)
     img = Image.fromarray(np.uint8(img_A), "RGB")
