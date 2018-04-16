@@ -421,10 +421,13 @@ class UNet(object):
         count = 0
         batch_buffer = list()
         for labels, source_imgs in source_iter:
-            fake_imgs = self.generate_fake_samples(source_imgs, labels)[0]
-            pdb.set_trace()
-            merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])  # scale 0-1
-            batch_buffer.append(merged_fake_images)
+            fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(source_imgs, labels)
+
+            merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])
+            merged_real_images = merge(scale_back(real_imgs), [self.batch_size, 1])
+            merged_pair = np.concatenate([merged_real_images, merged_fake_images], axis=1)
+
+            batch_buffer.append(merged_pair)
             if len(batch_buffer) == 10:
                 save_imgs(batch_buffer, count, save_dir)
                 batch_buffer = list()
@@ -563,6 +566,7 @@ class UNet(object):
                 counter += 1
                 labels, batch_images = batch
                 shuffled_ids = labels[:]
+                pdb.set_trace()
                 if flip_labels:
                     np.random.shuffle(shuffled_ids)
                 # Optimize D
