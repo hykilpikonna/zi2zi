@@ -1,5 +1,4 @@
 import os
-import pdb
 import time
 from collections import namedtuple
 
@@ -72,9 +71,10 @@ class UNet(object):
 
             # TODO: Chao - add more conv option, maxpooling
             def encode_layer(x, output_filters, layer):
-                conv = conv2d(x, output_filters=output_filters, scope="g_e%d_conv" % layer)
+                act = lrelu(x)
+                conv = conv2d(act, output_filters=output_filters, scope="g_e%d_conv" % layer)
                 enc = batch_norm(conv, is_training, scope="g_e%d_bn" % layer)
-                enc = lrelu(enc)
+
                 encode_layers["e%d" % layer] = enc
                 return enc
 
@@ -101,9 +101,8 @@ class UNet(object):
             batch_size = tf.shape(encoded)[0]
 
             def decode_layer(x, output_width, output_filters, layer, enc_layer, dropout=False, do_concat=True):
-                dec = deconv2d(x, [batch_size, output_width,
+                dec = deconv2d(tf.nn.relu(x), [batch_size, output_width,
                                                output_width, output_filters], scope="g_d%d_deconv" % layer)
-                dec = tf.nn.relu(dec)
                 if layer != 8:
                     # IMPORTANT: normalization for last layer
                     # Very important, otherwise GAN is unstable
