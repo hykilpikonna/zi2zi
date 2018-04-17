@@ -383,7 +383,7 @@ class UNet(object):
         labels, images = next(val_iter)
         fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(images, labels)
         print("Sample: d_loss: %.5f, g_loss: %.5f, l1_loss: %.5f" % (d_loss, g_loss, l1_loss))
-
+        # TODO: Chao - without batch size
         merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])
         merged_real_images = merge(scale_back(real_imgs), [self.batch_size, 1])
         merged_pair = np.concatenate([merged_real_images, merged_fake_images], axis=1)

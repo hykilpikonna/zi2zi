@@ -6,11 +6,11 @@ import numpy as np
 from PIL import Image, ImageFont
 
 from handwriting_preparation.preprocessing.crop_characters import char_img_iter
-from model.preprocessing_helper import draw_single_char, CHAR_SIZE, CANVAS_SIZE
+from model.preprocessing_helper import draw_single_char_by_font, CHAR_SIZE, CANVAS_SIZE
 
 
-def draw_example(ch, src_font, dst_img, canvas_size):
-    src_img = draw_single_char(ch, src_font, canvas_size)
+def draw_example(ch, src_font, dst_img, canvas_size, char_size):
+    src_img = draw_single_char_by_font(ch, src_font, canvas_size, char_size)
 
     assert dst_img.size == (canvas_size, canvas_size), pdb.set_trace()
 
@@ -48,7 +48,7 @@ if __name__ == '__main__':
         pass
 
     for ch, dst_img in char_img_iter(image_path, box_path):
-        e = draw_example(ch, src_font, dst_img, CANVAS_SIZE)
+        e = draw_example(ch, src_font, dst_img, CANVAS_SIZE, CHAR_SIZE)
         if e:
             for _ in range(args.resample):
                 e.save(os.path.join(args.sample_dir, "%d_%04d.jpg" % (args.embedding_id, count)), mode='F')
