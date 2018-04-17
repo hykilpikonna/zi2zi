@@ -4,7 +4,7 @@ PYTHONPATH=. python font2img.py
 # Read images, split and convert to numpy arrays, save to pickles
 PYTHONPATH=. python package.py --dir=data/paired_images \
                                --save_dir=experiments/data \
-                               --split_ratio=0.2
+                               --split_ratio=0.1
 
 # Train the model
 PYTHONPATH=. python train.py --experiment_dir=experiments \

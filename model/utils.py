@@ -1,15 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import absolute_import
 
-import os
 import glob
+import os
+from io import BytesIO
 
 import imageio
-import scipy.misc as misc
 import numpy as np
-from io import StringIO
-from io import BytesIO
+import scipy.misc as misc
 
 
 def pad_seq(seq, batch_size):
@@ -30,28 +27,27 @@ def normalize_image(img):
     """
     Make image zero centered and in between (-1, 1)
     """
-    normalized = (img / 127.5) - 1.
+    normalized = img / 255.
     return normalized
 
 
 def read_split_image(img):
-    mat = misc.imread(img).astype(np.float)
+    mat = misc.imread(img, flatten=True).astype(np.float32)
     side = int(mat.shape[1] / 2)
     assert side * 2 == mat.shape[1]
     img_A = mat[:, :side]  # target
     img_B = mat[:, side:]  # source
-
     return img_A, img_B
 
 
 def shift_and_resize_image(img, shift_x, shift_y, nw, nh):
-    w, h, _ = img.shape
+    w, h = img.shape
     enlarged = misc.imresize(img, [nw, nh])
     return enlarged[shift_x:shift_x + w, shift_y:shift_y + h]
 
 
 def scale_back(images):
-    return (images + 1.) / 2.
+    return images * 255.
 
 
 def merge(images, size):

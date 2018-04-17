@@ -12,7 +12,7 @@ from PIL import ImageFont
 
 # reload(sys)
 # sys.setdefaultencoding("utf-8")
-from model.preprocessing_helper import draw_single_char, draw_example, get_textsize, CHAR_SIZE, CANVAS_SIZE
+from model.preprocessing_helper import draw_single_char_by_font, draw_example, CHAR_SIZE, CANVAS_SIZE
 
 importlib.reload(sys)
 
@@ -37,7 +37,7 @@ def load_global_charset():
     GB6763_CHARSET = cjk["gb6763"]
 
 
-def filter_recurring_hash(charset, font, canvas_size):
+def filter_recurring_hash(charset, font, canvas_size, char_size):
     """ Some characters are missing in a given font, filter them
     by checking the recurring hashes
     """
@@ -46,7 +46,7 @@ def filter_recurring_hash(charset, font, canvas_size):
     sample = _charset[:2000]
     hash_count = collections.defaultdict(int)
     for c in sample:
-        img = draw_single_char(c, font, canvas_size)
+        img = draw_single_char_by_font(c, font, canvas_size, char_size)
         hash_count[hash(img.tobytes())] += 1
     recurring_hashes = filter(lambda d: d[1] > 2, hash_count.items())
     return [rh[0] for rh in recurring_hashes]
@@ -62,7 +62,7 @@ def font2img(src, dst, charset, char_size, canvas_size,
 
     filter_hashes = set()
     if filter_by_hash:
-        filter_hashes = set(filter_recurring_hash(charset, dst_font, canvas_size))
+        filter_hashes = set(filter_recurring_hash(charset, dst_font, canvas_size, char_size))
         print("filter hashes -> %s" % (",".join([str(h) for h in filter_hashes])))
 
     count = 0
@@ -70,9 +70,9 @@ def font2img(src, dst, charset, char_size, canvas_size,
     for c in charset:
         if count == sample_count:
             break
-        e = draw_example(c, src_font, dst_font, canvas_size, filter_hashes)
+        e = draw_example(c, src_font, dst_font, canvas_size, filter_hashes, char_size)
         if e:
-            e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)))
+            e.save(os.path.join(sample_dir, "%d_%04d.jpg" % (label, count)), mode='F')
             count += 1
             if count % 100 == 0:
                 print("processed %d chars" % count)
@@ -80,31 +80,20 @@ def font2img(src, dst, charset, char_size, canvas_size,
 
 load_global_charset()
 parser = argparse.ArgumentParser(description='Convert font to images')
-# parser.add_argument('--src_font', dest='src_font', required=True, help='path of the source font')
-# parser.add_argument('--dst_font', dest='dst_font', required=True, help='path of the target font')
-parser.add_argument('--filter', dest='filter', type=int, default=0, help='filter recurring characters')
-parser.add_argument('--charset', dest='charset', type=str, default='CN',
+parser.add_argument('--src_font', default='data/raw_fonts/SimSun.ttf', help='path of the source font')
+parser.add_argument('--fonts_dir', default='data/raw_fonts', help='dir path of the target fonts')
+parser.add_argument('--filter', type=int, default=0, help='filter recurring characters')
+parser.add_argument('--charset', type=str, default='CN',
                     help='charset, can be either: CN, JP, KR , GB775, GB6763 or a one line file')
-parser.add_argument('--shuffle', dest='shuffle', type=int, default=True, help='shuffle a charset before processings')
-parser.add_argument('--char_size', dest='char_size', type=int, default=CHAR_SIZE, help='character size')
-parser.add_argument('--canvas_size', dest='canvas_size', type=int, default=CANVAS_SIZE, help='canvas size')
-parser.add_argument('--sample_count', dest='sample_count', type=int, default=5, help='number of characters to draw')
-parser.add_argument('--sample_dir', dest='sample_dir', help='directory to save examples')
+parser.add_argument('--shuffle', type=int, default=True, help='shuffle a charset before processings')
+parser.add_argument('--char_size', type=int, default=CHAR_SIZE, help='character size')
+parser.add_argument('--canvas_size', type=int, default=CANVAS_SIZE, help='canvas size')
+parser.add_argument('--sample_count', type=int, default=100, help='number of characters to draw')
+parser.add_argument('--sample_dir', default='data/paired_images', help='directory to save examples')
 
 args = parser.parse_args()
 
-# img = Image.new("RGB", (150, 200), (255, 255, 255))
-# draw = ImageDraw.Draw(img)
-# src_font = ImageFont.truetype('data/raw_fonts/井柏然体.ttf', size=150)
-# print(get_textsize(src_font))
-# draw.text((0, 0), '吖', fill=(0, 0, 0), font=src_font)
-# pdb.set_trace()
-
 if __name__ == "__main__":
-
-    args.src_font = "data/raw_fonts/SimSun.ttf"
-    args.fonts_dir = "data/raw_fonts"
-    args.sample_dir = "data/paired_images"
 
     label = 0
     for root, dirs, files in os.walk(args.fonts_dir):
@@ -115,7 +104,7 @@ if __name__ == "__main__":
                 if args.charset in ['CN', 'JP', 'KR', 'CN_T', 'GB775', 'GB6763']:
                     charset = locals().get("%s_CHARSET" % args.charset)
                 else:
-                    charset = [c for c in open(args.charset).readline()[:-1].decode("utf-8")]
+                    charset = [c for c in open(args.charset).readline()[:-1]]
 
                 if args.shuffle:
                     np.random.shuffle(charset)

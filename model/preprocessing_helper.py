@@ -7,42 +7,53 @@ from PIL import ImageDraw
 
 from .utils import save_concat_images
 
-CANVAS_SIZE = 150
-CHAR_SIZE = 120
+CANVAS_SIZE = 128
+CHAR_SIZE = 105
 
 
-def get_offset_size(ch, draw, font, canvas_size):
-    pix_size = draw.textsize(ch, font=font)
-    x_offset = (canvas_size - pix_size[0]) // 2
-    y_offset = (canvas_size - pix_size[1]) // 2
-    return x_offset, y_offset
+def _draw_single_char(font, ch, width, height):
+    img = Image.new("RGB", (width, height), (255, 255, 255))
+    draw = ImageDraw.Draw(img)
+    draw.text((0, 0), ch, fill=(0, 0, 0), font=font)
+    return img
 
 
-def get_textsize(font):
-    # size = int(150*1.0)
+def get_textsize(font, ch):
     img = Image.new("RGB", (1, 1), (255, 255, 255))
     draw = ImageDraw.Draw(img)
-    # draw.text((0,0), '器', fill=(0, 0, 0), font=font)
-    # img.show()
-    # pdb.set_trace()
-    char_size = draw.textsize('早', font=font)
+    char_size = draw.textsize(ch, font=font)
+    return char_size
 
-    return int(max(char_size))
+
+def draw_single_char(img, canvas_size, char_size):
+    width, height = img.size
+    factor = width * 1.0 / char_size
+
+    max_height = canvas_size + 30
+    if height / factor > max_height:  # too long
+        img = img.crop((0, 0, width, int(max_height * factor)))
+    if height / factor > char_size + 5:  # CANVAS_SIZE/CHAR_SIZE is a benchmark, height should be less
+        factor = height * 1.0 / char_size
+
+    img = img.resize((int(width / factor), int(height / factor)), resample=PIL.Image.LANCZOS)
+
+    bg_img = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
+    offset = ((canvas_size - img.size[0]) // 2, (canvas_size - img.size[1]) // 2)
+    bg_img.paste(img, offset)
+    return bg_img
+
+
+def draw_single_char_by_font(ch, font, canvas_size, char_size):
+    width, height = get_textsize(font, ch)
+    char_img = _draw_single_char(font, ch, width, height)
+
+    return draw_single_char(char_img, canvas_size, char_size)
 
 
 def save_imgs(imgs, count, save_dir):
     p = os.path.join(save_dir, "inferred_%04d.png" % count)
     save_concat_images(imgs, img_path=p)
     print("generated images saved at %s" % p)
-
-
-def draw_single_char(ch, font, canvas_size):
-    img = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
-    draw = ImageDraw.Draw(img)
-    x_offset, y_offset = get_offset_size(ch, draw, font, canvas_size)
-
-    draw.text((x_offset, y_offset), ch, fill=(0, 0, 0), font=font)
-    return img
 
 
 def draw_paired_image(src_img, dst_img, canvas_size):
@@ -55,9 +66,9 @@ def draw_paired_image(src_img, dst_img, canvas_size):
     return example_img
 
 
-def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes):
-    src_img = draw_single_char(ch, src_font, canvas_size)
-    dst_img = draw_single_char(ch, dst_font, canvas_size)
+def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes, char_size):
+    src_img = draw_single_char_by_font(ch, src_font, canvas_size, char_size)
+    dst_img = draw_single_char_by_font(ch, dst_font, canvas_size, char_size)
 
     # check the filter example in the hashes or not
     dst_hash = hash(dst_img.tobytes())

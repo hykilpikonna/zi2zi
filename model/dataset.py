@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import print_function
 
 import os
 import pickle as pickle
@@ -49,8 +47,8 @@ def get_batch_iter(examples, batch_size, augment, embedding_id=None):
                 # 2) random crop the image back to its original size
                 # NOTE: image A and B needs to be in sync as how much
                 # to be shifted
-                w, h, _ = img_A.shape
-                multiplier = random.uniform(1.00, 1.20)
+                w, h = img_A.shape
+                multiplier = random.uniform(1.00, 1.05)
                 # add an eps to prevent cropping issue
                 nw = int(multiplier * w) + 1
                 nh = int(multiplier * h) + 1
@@ -60,7 +58,8 @@ def get_batch_iter(examples, batch_size, augment, embedding_id=None):
                 img_B = shift_and_resize_image(img_B, shift_x, shift_y, nw, nh)
             img_A = normalize_image(img_A)
             img_B = normalize_image(img_B)
-            return np.concatenate([img_A, img_B], axis=2)
+            merged = np.stack([img_A, img_B], axis=2)
+            return merged
         finally:
             img.close()
 
@@ -85,7 +84,6 @@ def get_batch_iter(examples, batch_size, augment, embedding_id=None):
                 yield labels, np.array(processed).astype(np.float32)
                 labels, processed = [], []
         if labels:
-
             yield labels, np.array(processed).astype(np.float32)
 
     if embedding_id is None:
@@ -104,8 +102,8 @@ class TrainDataProvider(object):
         self.val = PickledImageProvider(self.val_path)
         if self.filter_by:
             print("filter by label ->", filter_by)
-            self.train.examples = filter(lambda e: e[0] in self.filter_by, self.train.examples)
-            self.val.examples = filter(lambda e: e[0] in self.filter_by, self.val.examples)
+            self.train.examples = list(filter(lambda e: e[0] in self.filter_by, self.train.examples))
+            self.val.examples = list(filter(lambda e: e[0] in self.filter_by, self.val.examples))
         print("train examples -> %d, val examples -> %d" % (len(self.train.examples), len(self.val.examples)))
 
     def get_train_iter(self, batch_size, shuffle=True):
@@ -145,7 +143,7 @@ class InjectDataProvider(object):
 
     def get_single_embedding_iter(self, batch_size, embedding_id):
         examples = self.data.examples[:]
-        batch_iter = get_batch_iter(examples, batch_size, augment=False, embedding_id = embedding_id)
+        batch_iter = get_batch_iter(examples, batch_size, augment=False, embedding_id=embedding_id)
         for _, images in batch_iter:
             # inject specific embedding style here
             labels = [embedding_id] * batch_size

@@ -1,15 +1,10 @@
-# -*- coding: utf-8 -*-
-from __future__ import absolute_import
-from __future__ import print_function
-
 import os
-import pdb
 import time
 from collections import namedtuple
 
 import numpy as np
-import scipy.misc as misc
 import tensorflow as tf
+from scipy import misc
 
 from model.preprocessing_helper import save_imgs
 from .dataset import TrainDataProvider, InjectDataProvider
@@ -28,7 +23,7 @@ SummaryHandle = namedtuple("SummaryHandle", ["d_merged", "g_merged"])
 class UNet(object):
     def __init__(self, experiment_dir=None, experiment_id=0, batch_size=32, input_width=150, output_width=150,
                  generator_dim=64, discriminator_dim=64, L1_penalty=100, Lconst_penalty=15, Ltv_penalty=0.0,
-                 Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=3, output_filters=3):
+                 Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=1, output_filters=1):
         self.experiment_dir = experiment_dir
         self.experiment_id = experiment_id
         self.batch_size = batch_size
@@ -76,9 +71,9 @@ class UNet(object):
 
             # TODO: Chao - add more conv option, maxpooling
             def encode_layer(x, output_filters, layer):
-                act = lrelu(x)
-                conv = conv2d(act, output_filters=output_filters, scope="g_e%d_conv" % layer)
+                conv = conv2d(x, output_filters=output_filters, scope="g_e%d_conv" % layer)
                 enc = batch_norm(conv, is_training, scope="g_e%d_bn" % layer)
+                enc = lrelu(enc)
                 encode_layers["e%d" % layer] = enc
                 return enc
 
@@ -132,8 +127,7 @@ class UNet(object):
             d7 = decode_layer(d6, s2, self.generator_dim, layer=7, enc_layer=encoding_layers["e1"])
             d8 = decode_layer(d7, s, self.output_filters, layer=8, enc_layer=None, do_concat=False)
 
-            # TODO: Chao why not sigmoid
-            output = tf.nn.tanh(d8)  # scale to (-1, 1)
+            output = tf.nn.sigmoid(d8)  # scale to  (0,1)
             return output
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
