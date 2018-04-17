@@ -1,4 +1,5 @@
 import os
+import pdb
 import time
 from collections import namedtuple
 
@@ -97,10 +98,12 @@ class UNet(object):
             s = self.output_width
             s2, s4, s8, s16, s32, s64, s128 = int(s / 2), int(s / 4), int(s / 8), int(s / 16), int(s / 32), int(
                 s / 64), int(s / 128)
+            batch_size = tf.shape(encoded)[0]
 
             def decode_layer(x, output_width, output_filters, layer, enc_layer, dropout=False, do_concat=True):
-                dec = deconv2d(tf.nn.relu(x), [self.batch_size, output_width,
+                dec = deconv2d(x, [batch_size, output_width,
                                                output_width, output_filters], scope="g_d%d_deconv" % layer)
+                dec = tf.nn.relu(dec)
                 if layer != 8:
                     # IMPORTANT: normalization for last layer
                     # Very important, otherwise GAN is unstable
@@ -133,7 +136,7 @@ class UNet(object):
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
         e8, enc_layers = self.encoder(images, is_training=is_training, reuse=reuse)
         local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids)  # category embedding
-        local_embeddings = tf.reshape(local_embeddings, [self.batch_size, 1, 1, self.embedding_dim])
+        local_embeddings = tf.reshape(local_embeddings, [-1, 1, 1, self.embedding_dim])
         embedded = tf.concat([e8, local_embeddings], 3)  # encoded character + category embedding
         output = self.decoder(embedded, enc_layers, embedding_ids, inst_norm, is_training=is_training, reuse=reuse)
         return output, e8
@@ -150,20 +153,22 @@ class UNet(object):
             h3 = lrelu(batch_norm(conv2d(h2, self.discriminator_dim * 8, sh=1, sw=1, scope="d_h3_conv"),
                                   is_training, scope="d_bn_3"))
             # real or fake binary loss
-            fc1 = fc(tf.reshape(h3, [self.batch_size, -1]), 1, scope="d_fc1")
+            h3_shapes = h3.get_shape().as_list()
+
+            fc1 = fc(tf.reshape(h3, [-1, np.prod(h3_shapes[1:])]), 1, scope="d_fc1")
             # category loss
-            fc2 = fc(tf.reshape(h3, [self.batch_size, -1]), self.embedding_num, scope="d_fc2")
+            fc2 = fc(tf.reshape(h3, [-1, np.prod(h3_shapes[1:])]), self.embedding_num, scope="d_fc2")
 
             return tf.nn.sigmoid(fc1), fc1, fc2
 
     def build_model(self, is_training=True, inst_norm=False, no_target_source=False):
         real_data = tf.placeholder(tf.float32,
-                                   [self.batch_size, self.input_width, self.input_width,
+                                   [None, self.input_width, self.input_width,
                                     self.input_filters + self.output_filters],
                                    name='real_A_and_B_images')
         embedding_ids = tf.placeholder(tf.int64, shape=None, name="embedding_ids")
         no_target_data = tf.placeholder(tf.float32,
-                                        [self.batch_size, self.input_width, self.input_width,
+                                        [None, self.input_width, self.input_width,
                                          self.input_filters + self.output_filters],
                                         name='no_target_A_and_B_images')
         no_target_ids = tf.placeholder(tf.int64, shape=None, name="no_target_embedding_ids")
@@ -193,7 +198,7 @@ class UNet(object):
 
         # category loss
         true_labels = tf.reshape(tf.one_hot(indices=embedding_ids, depth=self.embedding_num),
-                                 shape=[self.batch_size, self.embedding_num])
+                                 shape=[-1, self.embedding_num])
         real_category_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=real_category_logits,
                                                                                     labels=true_labels))
         fake_category_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_category_logits,
@@ -229,7 +234,7 @@ class UNet(object):
                                                               is_training=is_training,
                                                               inst_norm=inst_norm, reuse=True)
             no_target_labels = tf.reshape(tf.one_hot(indices=no_target_ids, depth=self.embedding_num),
-                                          shape=[self.batch_size, self.embedding_num])
+                                          shape=[-1, self.embedding_num])
             no_target_AB = tf.concat([no_target_A, no_target_B], 3)
             no_target_D, no_target_D_logits, no_target_category_logits = self.discriminator(no_target_AB,
                                                                                             is_training=is_training,
@@ -329,7 +334,7 @@ class UNet(object):
         return input_handle, loss_handle, eval_handle, summary_handle
 
     def get_model_id_and_dir(self):
-        model_id = "experiment_%d_batch_%d" % (self.experiment_id, self.batch_size)
+        model_id = "experiment_%d" % self.experiment_id
         model_dir = os.path.join(self.checkpoint_dir, model_id)
         return model_id, model_dir
 
@@ -384,8 +389,8 @@ class UNet(object):
         fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(images, labels)
         print("Sample: d_loss: %.5f, g_loss: %.5f, l1_loss: %.5f" % (d_loss, g_loss, l1_loss))
         # TODO: Chao - without batch size
-        merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])
-        merged_real_images = merge(scale_back(real_imgs), [self.batch_size, 1])
+        merged_fake_images = merge(scale_back(fake_imgs), [-1, 1])
+        merged_real_images = merge(scale_back(real_imgs), [-1, 1])
         merged_pair = np.concatenate([merged_real_images, merged_fake_images], axis=1)
 
         model_id, _ = self.get_model_id_and_dir()

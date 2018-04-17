@@ -52,7 +52,10 @@ def scale_back(images):
 
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
-    img = np.zeros((h * size[0], w * size[1], 3))
+    if size[0] == -1:
+        assert len(images.shape) == 4  # images = (N, 128, 128, 1)
+        size[0] = images.shape[0]
+    img = np.full((h * size[0], w * size[1], 3), 1.)
     for idx, image in enumerate(images):
         i = idx % size[1]
         j = idx // size[1]

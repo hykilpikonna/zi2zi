@@ -88,7 +88,7 @@ parser.add_argument('--charset', type=str, default='CN',
 parser.add_argument('--shuffle', type=int, default=True, help='shuffle a charset before processings')
 parser.add_argument('--char_size', type=int, default=CHAR_SIZE, help='character size')
 parser.add_argument('--canvas_size', type=int, default=CANVAS_SIZE, help='canvas size')
-parser.add_argument('--sample_count', type=int, default=100, help='number of characters to draw')
+parser.add_argument('--sample_count', type=int, default=1000, help='number of characters to draw')
 parser.add_argument('--sample_dir', default='data/paired_images', help='directory to save examples')
 
 args = parser.parse_args()

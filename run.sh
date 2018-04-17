@@ -36,7 +36,7 @@ PYTHONPATH=. python package.py --dir=data/paired_images_finetune \
                                --save_dir=experiments_finetune/data \
                                --split_ratio=0.01
 
-# Train the model
+# Train/Finetune the model
 PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
                 --experiment_id=0 \
                 --batch_size=32 \

@@ -1,6 +1,9 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
 from __future__ import absolute_import
+from __future__ import print_function
+
+import pdb
+
 import tensorflow as tf
 
 
@@ -17,7 +20,8 @@ def conv2d(x, output_filters, kh=5, kw=5, sh=2, sw=2, stddev=0.02, scope="conv2d
         Wconv = tf.nn.conv2d(x, W, strides=[1, sh, sw, 1], padding='SAME')
 
         biases = tf.get_variable('b', [output_filters], initializer=tf.constant_initializer(0.0))
-        Wconv_plus_b = tf.reshape(tf.nn.bias_add(Wconv, biases), Wconv.get_shape())
+        Wconv_plus_b = tf.nn.bias_add(Wconv, biases)
+        # Wconv_plus_b = tf.reshape(tf.nn.bias_add(Wconv, biases), Wconv.get_shape())
 
         return Wconv_plus_b
 
@@ -28,12 +32,10 @@ def deconv2d(x, output_shape, kh=5, kw=5, sh=2, sw=2, stddev=0.02, scope="deconv
         input_shape = x.get_shape().as_list()
         W = tf.get_variable('W', [kh, kw, output_shape[-1], input_shape[-1]],
                             initializer=tf.random_normal_initializer(stddev=stddev))
-
-        deconv = tf.nn.conv2d_transpose(x, W, output_shape=output_shape,
-                                        strides=[1, sh, sw, 1])
+        deconv = tf.nn.conv2d_transpose(x, W, output_shape=output_shape, strides=[1, sh, sw, 1])
 
         biases = tf.get_variable('b', [output_shape[-1]], initializer=tf.constant_initializer(0.0))
-        deconv_plus_b = tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
+        deconv_plus_b = tf.nn.bias_add(deconv, biases)  # tf.reshape(tf.nn.bias_add(deconv, biases), deconv.get_shape())
 
         return deconv_plus_b
 

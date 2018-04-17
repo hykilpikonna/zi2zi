@@ -35,7 +35,7 @@ class PickledImageProvider(object):
 def get_batch_iter(examples, batch_size, augment, embedding_id=None):
     # the transpose ops requires deterministic
     # batch size, thus comes the padding
-    padded = pad_seq(examples, batch_size)
+    # padded = pad_seq(examples, batch_size)
 
     def process(img):
         img = bytes_to_file(img)
@@ -64,8 +64,8 @@ def get_batch_iter(examples, batch_size, augment, embedding_id=None):
             img.close()
 
     def batch_iter():
-        for i in range(0, len(padded), batch_size):
-            batch = padded[i: i + batch_size]
+        for i in range(0, len(examples), batch_size):
+            batch = examples[i: i + batch_size]
             labels = [e[0] for e in batch]
             processed = [process(e[1]) for e in batch]
             # stack into tensor
@@ -146,7 +146,7 @@ class InjectDataProvider(object):
         batch_iter = get_batch_iter(examples, batch_size, augment=False, embedding_id=embedding_id)
         for _, images in batch_iter:
             # inject specific embedding style here
-            labels = [embedding_id] * batch_size
+            labels = [embedding_id] * len(images)
             yield labels, images
 
     def get_random_embedding_iter(self, batch_size, embedding_ids):
@@ -154,7 +154,7 @@ class InjectDataProvider(object):
         batch_iter = get_batch_iter(examples, batch_size, augment=False)
         for _, images in batch_iter:
             # inject specific embedding style here
-            labels = [random.choice(embedding_ids) for i in range(batch_size)]
+            labels = [random.choice(embedding_ids) for i in range(len(images))]
             yield labels, images
 
 
