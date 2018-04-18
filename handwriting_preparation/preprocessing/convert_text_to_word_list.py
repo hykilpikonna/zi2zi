@@ -7,5 +7,5 @@ with open("text.txt") as f:
             if w.strip():
                 swords.add(w.strip())
 
-with open("../tessdata/configs/wordlist2", "w") as g:
+with open("../tessdata/configs/wordlist", "w") as g:
     g.write("tessedit_char_whitelist " + "".join(swords) + "\n")
