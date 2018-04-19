@@ -20,6 +20,8 @@ People are made to have fun and be 中二 sometimes
 """
 
 parser = argparse.ArgumentParser(description='Inference for unseen data')
+parser.add_argument('--experiment_id', dest='experiment_id', type=int, default=0,
+                    help='sequence id for the experiments you prepare to run')
 parser.add_argument('--model_dir', dest='model_dir', default="experiments/checkpoint/experiment_0",
                     help='directory that saves the model checkpoints')
 parser.add_argument('--batch_size', dest='batch_size', type=int, default=16, help='number of examples in batch')
@@ -42,7 +44,7 @@ def main(_):
     src_font = ImageFont.truetype(args.src_font, size=args.char_size)
 
     with tf.Session(config=config) as sess:
-        model = UNet(batch_size=args.batch_size)
+        model = UNet(batch_size=args.batch_size, input_width=args.image_size, output_width=args.image_size, experiment_id=args.experiment_id)
         model.register_session(sess)
         model.build_model(is_training=False, inst_norm=args.inst_norm)
         model.load_model(args.model_dir)
