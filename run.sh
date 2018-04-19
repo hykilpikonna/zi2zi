@@ -46,7 +46,8 @@ PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
                 --schedule=20 \
                 --L1_penalty=100 \
                 --Lconst_penalty=15 \
-                --freeze_encoder=1 \
+                --freeze_encoder_decoder=1 \
+                --optimizer=sgd \
                 --fine_tune=67 \
                 --flip_labels=1
 

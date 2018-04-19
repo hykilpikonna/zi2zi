@@ -1,5 +1,4 @@
 import os
-import pdb
 import time
 from collections import namedtuple
 
@@ -119,6 +118,7 @@ class UNet(object):
                 if do_concat:
                     dec = tf.concat([dec, enc_layer], 3)
                 return dec
+
             d1 = decode_layer(encoded, s128, self.generator_dim * 8, layer=1, enc_layer=encoding_layers["e7"],
                               dropout=True)
             d2 = decode_layer(d1, s64, self.generator_dim * 8, layer=2, enc_layer=encoding_layers["e6"], dropout=True)
@@ -306,16 +306,17 @@ class UNet(object):
     def register_session(self, sess):
         self.sess = sess
 
-    def retrieve_trainable_vars(self, freeze_encoder=False):
+    def retrieve_trainable_vars(self, freeze_encoder_decoder=False):
         t_vars = tf.trainable_variables()
 
         d_vars = [var for var in t_vars if 'd_' in var.name]
         g_vars = [var for var in t_vars if 'g_' in var.name]
 
-        if freeze_encoder:
+        if freeze_encoder_decoder:
             # exclude encoder weights
-            print("freeze encoder weights")
-            g_vars = [var for var in g_vars if not ("g_e" in var.name)]
+            print("freeze encoder/decoder weights")
+            g_vars = [var for var in t_vars if "embedding" in var.name]
+            d_vars = []
 
         return g_vars, d_vars
 
@@ -516,15 +517,26 @@ class UNet(object):
             self.sess.run(op)
 
     def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, resume_pre_model=True, flip_labels=False,
-              freeze_encoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500):
-        g_vars, d_vars = self.retrieve_trainable_vars(freeze_encoder=freeze_encoder)
+              freeze_encoder_decoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500, optimizer="adam"):
+        g_vars, d_vars = self.retrieve_trainable_vars(freeze_encoder_decoder=freeze_encoder_decoder)
         input_handle, loss_handle, _, summary_handle = self.retrieve_handles()
         if not self.sess:
             raise Exception("no session registered")
 
         learning_rate = tf.placeholder(tf.float32, name="learning_rate")
-        d_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5).minimize(loss_handle.d_loss, var_list=d_vars)
-        g_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5).minimize(loss_handle.g_loss, var_list=g_vars)
+
+        if optimizer.lower() == "adam":
+            _d_optimizier = tf.train.AdamOptimizer(learning_rate, beta1=0.5)
+            _g_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5)
+        elif optimizer.lower() == "sgd":
+            _d_optimizier = tf.train.GradientDescentOptimizer(learning_rate)
+            _g_optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+        else:
+            raise ValueError("Unknown optimizer: %s" % optimizer)
+
+        d_optimizer = _d_optimizier.minimize(loss_handle.d_loss, var_list=d_vars)
+        g_optimizer = _g_optimizer.minimize(loss_handle.g_loss, var_list=g_vars)
+
         tf.global_variables_initializer().run()
         real_data = input_handle.real_data
         embedding_ids = input_handle.embedding_ids
