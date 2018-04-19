@@ -53,12 +53,12 @@ PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
 PYTHONPATH=. python infer.py --model_dir=experiments_finetune/checkpoint/experiment_0 \
                 --batch_size=32 \
                 --source_obj=experiments_finetune/data/val.obj \
-                --embedding_ids=67 \
+                --embedding_id=67 \
                 --save_dir=save_dir/
 
 
 
 PYTHONPATH=. python infer_by_text.py --model_dir=experiments_finetune/checkpoint/experiment_0 \
                 --batch_size=32 \
-                --embedding_ids=67 \
+                --embedding_id=67 \
                 --save_dir=save_dir/

@@ -44,7 +44,7 @@ def main(_):
     src_font = ImageFont.truetype(args.src_font, size=args.char_size)
 
     with tf.Session(config=config) as sess:
-        model = UNet(batch_size=args.batch_size, input_width=args.image_size, output_width=args.image_size, experiment_id=args.experiment_id)
+        model = UNet(batch_size=args.batch_size, input_width=args.canvas_size, output_width=args.image_size, experiment_id=args.experiment_id)
         model.register_session(sess)
         model.build_model(is_training=False, inst_norm=args.inst_norm)
         model.load_model(args.model_dir)
