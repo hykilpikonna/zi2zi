@@ -39,10 +39,10 @@ PYTHONPATH=. python package.py --dir=data/paired_images_finetune \
 # Train/Finetune the model
 PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
                 --experiment_id=0 \
-                --batch_size=32 \
-                --lr=0.001 \
-                --epoch=5 \
-                --sample_steps=5 \
+                --batch_size=16 \
+                --lr=0.0001 \
+                --epoch=2 \
+                --sample_steps=2 \
                 --schedule=20 \
                 --L1_penalty=100 \
                 --Lconst_penalty=15 \
@@ -50,8 +50,15 @@ PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
                 --fine_tune=67 \
                 --flip_labels=1
 
-PYTHONPATH=. python infer.py --model_dir=experiments_finetune/checkpoint/experiment_0_batch_32 \
+PYTHONPATH=. python infer.py --model_dir=experiments_finetune/checkpoint/experiment_0 \
                 --batch_size=32 \
                 --source_obj=experiments_finetune/data/val.obj \
-                --embedding_ids=48 \
+                --embedding_ids=67 \
+                --save_dir=save_dir/
+
+
+
+PYTHONPATH=. python infer_by_text.py --model_dir=experiments_finetune/checkpoint/experiment_0 \
+                --batch_size=32 \
+                --embedding_ids=67 \
                 --save_dir=save_dir/

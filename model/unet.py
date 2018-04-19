@@ -1,4 +1,5 @@
 import os
+import pdb
 import time
 from collections import namedtuple
 
@@ -21,7 +22,7 @@ SummaryHandle = namedtuple("SummaryHandle", ["d_merged", "g_merged"])
 
 
 class UNet(object):
-    def __init__(self, experiment_dir=None, experiment_id=0, batch_size=32, input_width=150, output_width=150,
+    def __init__(self, experiment_dir=None, experiment_id=0, batch_size=32, input_width=128, output_width=128,
                  generator_dim=64, discriminator_dim=64, L1_penalty=100, Lconst_penalty=15, Ltv_penalty=0.0,
                  Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=1, output_filters=1):
         self.experiment_dir = experiment_dir
@@ -118,7 +119,6 @@ class UNet(object):
                 if do_concat:
                     dec = tf.concat([dec, enc_layer], 3)
                 return dec
-
             d1 = decode_layer(encoded, s128, self.generator_dim * 8, layer=1, enc_layer=encoding_layers["e7"],
                               dropout=True)
             d2 = decode_layer(d1, s64, self.generator_dim * 8, layer=2, enc_layer=encoding_layers["e6"], dropout=True)
