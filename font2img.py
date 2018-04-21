@@ -4,15 +4,15 @@ import argparse
 import importlib
 import json
 import os
+import pdb
 import sys
 
 import collections
 import numpy as np
 from PIL import ImageFont
 
-# reload(sys)
-# sys.setdefaultencoding("utf-8")
 from model.preprocessing_helper import draw_single_char_by_font, draw_example, CHAR_SIZE, CANVAS_SIZE
+from package import save_train_valid_data
 
 importlib.reload(sys)
 
@@ -57,6 +57,10 @@ def font2img(src, dst, charset, char_size, canvas_size,
     assert os.path.isfile(src), "src file doesn't exist:%s" % src
     assert os.path.isfile(dst), "dst file doesn't exist:%s" % dst
 
+    if not os.path.isdir(sample_dir):
+        print("warning: creating sample dir: %s" % sample_dir)
+        os.makedirs(sample_dir)
+
     src_font = ImageFont.truetype(src, size=char_size)
     dst_font = ImageFont.truetype(dst, size=char_size)
 
@@ -82,14 +86,18 @@ load_global_charset()
 parser = argparse.ArgumentParser(description='Convert font to images')
 parser.add_argument('--src_font', default='data/raw_fonts/SimSun.ttf', help='path of the source font')
 parser.add_argument('--fonts_dir', default='data/raw_fonts', help='dir path of the target fonts')
-parser.add_argument('--filter', type=int, default=0, help='filter recurring characters')
+parser.add_argument('--filter', type=int, default=1, help='filter recurring characters')
 parser.add_argument('--charset', type=str, default='CN',
                     help='charset, can be either: CN, JP, KR , GB775, GB6763 or a one line file')
 parser.add_argument('--shuffle', type=int, default=True, help='shuffle a charset before processings')
 parser.add_argument('--char_size', type=int, default=CHAR_SIZE, help='character size')
 parser.add_argument('--canvas_size', type=int, default=CANVAS_SIZE, help='canvas size')
-parser.add_argument('--sample_count', type=int, default=1000, help='number of characters to draw')
+parser.add_argument('--sample_count', type=int, default=3500, help='number of characters to draw')
 parser.add_argument('--sample_dir', default='data/paired_images', help='directory to save examples')
+
+# These two are for package.py
+parser.add_argument('--split_ratio', type=float, default=0.05, help='split ratio between train and val')
+parser.add_argument('--save_dir', default="experiments/data", help='path to save pickled files')
 
 args = parser.parse_args()
 
@@ -99,6 +107,7 @@ if __name__ == "__main__":
     for root, dirs, files in os.walk(args.fonts_dir):
         for name in files:
             if name.lower().endswith(".ttf") and name.lower() not in ["simsun.ttf", "井柏然体.ttf"]:
+                print("%s | %s" % (label, name))
                 dst_font = os.path.join(root, name)
 
                 if args.charset in ['CN', 'JP', 'KR', 'CN_T', 'GB775', 'GB6763']:
@@ -113,3 +122,6 @@ if __name__ == "__main__":
                          args.sample_count, args.sample_dir, label, args.filter)
                 label += 1
     print("Number of fonts:", label)
+
+    # Save as pickled file
+    save_train_valid_data(save_dir=args.save_dir, sample_dir=args.sample_dir, split_ratio=args.split_ratio)

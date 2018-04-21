@@ -1,25 +1,27 @@
 import os
+import pdb
 
 import PIL
 import numpy as np
-from PIL import Image
+from PIL import Image, ImageFont
 from PIL import ImageDraw
 
-from .utils import save_concat_images
+from model.utils import save_concat_images
 
 CANVAS_SIZE = 128
 CHAR_SIZE = 105
+EMBEDDING_DIM = 128
 
 
 def _draw_single_char(font, ch, width, height):
-    img = Image.new("RGB", (width, height), (255, 255, 255))
+    img = Image.new("L", (width, height), 255)
     draw = ImageDraw.Draw(img)
-    draw.text((0, 0), ch, fill=(0, 0, 0), font=font)
+    draw.text((0, 0), ch, fill=0, font=font)
     return img
 
 
 def get_textsize(font, ch):
-    img = Image.new("RGB", (1, 1), (255, 255, 255))
+    img = Image.new("L", (1, 1), 255)
     draw = ImageDraw.Draw(img)
     char_size = draw.textsize(ch, font=font)
     return char_size
@@ -37,7 +39,7 @@ def draw_single_char(img, canvas_size, char_size):
 
     img = img.resize((int(width / factor), int(height / factor)), resample=PIL.Image.LANCZOS)
 
-    bg_img = Image.new("RGB", (canvas_size, canvas_size), (255, 255, 255))
+    bg_img = Image.new("L", (canvas_size, canvas_size), 255)
     offset = ((canvas_size - img.size[0]) // 2, (canvas_size - img.size[1]) // 2)
     bg_img.paste(img, offset)
     return bg_img
@@ -60,7 +62,7 @@ def draw_paired_image(src_img, dst_img, canvas_size):
     assert src_img.size == (canvas_size, canvas_size)
     assert dst_img.size == (canvas_size, canvas_size)
 
-    example_img = Image.new("RGB", (canvas_size * 2, canvas_size), (255, 255, 255))
+    example_img = Image.new("L", (canvas_size * 2, canvas_size), 255)
     example_img.paste(dst_img, (0, 0))
     example_img.paste(src_img, (canvas_size, 0))
     return example_img
@@ -76,3 +78,25 @@ def draw_example(ch, src_font, dst_font, canvas_size, filter_hashes, char_size):
         return None
 
     return draw_paired_image(src_img, dst_img, canvas_size)
+
+
+def draw_example_src_only(ch, src_font, dst_img, canvas_size, char_size):
+    src_img = draw_single_char_by_font(ch, src_font, canvas_size, char_size)
+
+    assert dst_img.size == (canvas_size, canvas_size), pdb.set_trace()
+
+    if np.min(src_img) == 255 or np.min(dst_img) == 255:
+        return None
+
+    example_img = Image.new("L", (canvas_size * 2, canvas_size), 255)
+    example_img.paste(dst_img, (0, 0))
+    example_img.paste(src_img, (canvas_size, 0))
+    return example_img
+
+
+if __name__ == '__main__':
+    src_font = "/Users/chaopan/Downloads/shouxiezhongwenziti/shouxiezhongwenziti/µÁƒ‘ ÷–¥◊÷ÃÂ/ ÈÃÂ∑ª∞≤æ∞≥º∏÷± –– È.ttf"
+    print(os.path.isfile(src_font))
+    src_font = ImageFont.truetype(src_font, size=CHAR_SIZE)
+    src_img = draw_single_char_by_font('帅', src_font, CANVAS_SIZE, CHAR_SIZE)
+    src_img.show()

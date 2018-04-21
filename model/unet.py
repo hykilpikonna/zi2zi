@@ -1,4 +1,5 @@
 import os
+import pdb
 import time
 from collections import namedtuple
 
@@ -316,7 +317,7 @@ class UNet(object):
             # exclude encoder weights
             print("freeze encoder/decoder weights")
             g_vars = [var for var in t_vars if "embedding" in var.name]
-            d_vars = []
+            d_vars = [var for var in d_vars if "d_fc" in var.name]
 
         return g_vars, d_vars
 
@@ -537,7 +538,7 @@ class UNet(object):
         d_optimizer = _d_optimizier.minimize(loss_handle.d_loss, var_list=d_vars)
         g_optimizer = _g_optimizer.minimize(loss_handle.g_loss, var_list=g_vars)
 
-        tf.global_variables_initializer().run()
+        self.sess.run(tf.global_variables_initializer())
         real_data = input_handle.real_data
         embedding_ids = input_handle.embedding_ids
         no_target_data = input_handle.no_target_data

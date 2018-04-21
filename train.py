@@ -6,7 +6,7 @@ import argparse
 
 import tensorflow as tf
 
-from model.preprocessing_helper import CANVAS_SIZE
+from model.preprocessing_helper import CANVAS_SIZE, EMBEDDING_DIM
 from model.unet import UNet
 
 parser = argparse.ArgumentParser(description='Train')
@@ -21,23 +21,23 @@ parser.add_argument('--Lconst_penalty', type=int, default=15, help='weight for c
 parser.add_argument('--Ltv_penalty', type=float, default=0.0, help='weight for tv loss')
 parser.add_argument('--Lcategory_penalty', type=float, default=1.0,
                     help='weight for category loss')
-parser.add_argument('--embedding_num', type=int, default=80,
+parser.add_argument('--embedding_num', type=int, default=185,
                     help="number for distinct embeddings")
-parser.add_argument('--embedding_dim', type=int, default=64, help="dimension for embedding")
+parser.add_argument('--embedding_dim', type=int, default=EMBEDDING_DIM, help="dimension for embedding")
 parser.add_argument('--epoch', type=int, default=100, help='number of epoch')
 parser.add_argument('--batch_size', type=int, default=32, help='number of examples in batch')
 parser.add_argument('--lr', type=float, default=0.001, help='initial learning rate for adam')
 parser.add_argument('--schedule', type=int, default=10, help='number of epochs to half learning rate')
 parser.add_argument('--resume', type=int, default=1, help='resume from previous training')
 
-parser.add_argument('--resume_pre_model', type=int, default=1, help='resume from pre-training')
+parser.add_argument('--resume_pre_model', type=int, default=0, help='resume from pre-training')
 parser.add_argument('--optimizer', type=str, default="adam",
                     help="optimizer of the model")
 parser.add_argument('--freeze_encoder_decoder', type=int, default=0,
                     help="freeze encoder/decoder weights during training")
 parser.add_argument('--fine_tune', type=str, default=None,
                     help='specific labels id to be fine tuned')
-parser.add_argument('--inst_norm', type=int, default=0,
+parser.add_argument('--inst_norm', type=int, default=1,
                     help='use conditional instance normalization in your model')
 parser.add_argument('--sample_steps', type=int, default=20,
                     help='number of batches in between two samples are drawn from validation set')
@@ -68,9 +68,9 @@ def main(_):
             fine_tune_list = set([int(i) for i in ids])
 
         model.train(lr=args.lr, epoch=args.epoch, resume=args.resume, resume_pre_model=args.resume_pre_model,
-                    schedule=args.schedule, freeze_encoder=args.freeze_encoder, fine_tune=fine_tune_list,
+                    schedule=args.schedule, freeze_encoder_decoder=args.freeze_encoder_decoder, fine_tune=fine_tune_list,
                     sample_steps=args.sample_steps, checkpoint_steps=args.checkpoint_steps,
-                    flip_labels=args.flip_labels)
+                    flip_labels=args.flip_labels, optimizer=args.optimizer)
 
 
 if __name__ == '__main__':

@@ -1,15 +1,11 @@
 # Sample draw the fonts and save to paired_images
 PYTHONPATH=. python font2img.py
 
-# Read images, split and convert to numpy arrays, save to pickles
-PYTHONPATH=. python package.py --dir=data/paired_images \
-                               --save_dir=experiments/data \
-                               --split_ratio=0.1
 
 # Train the model
 PYTHONPATH=. python train.py --experiment_dir=experiments \
                 --experiment_id=0 \
-                --batch_size=32 \
+                --batch_size=128 \
                 --lr=0.001 \
                 --epoch=40 \
                 --sample_steps=50 \
@@ -31,18 +27,14 @@ PYTHONPATH=. python infer.py --model_dir=experiments/checkpoint/experiment_0_bat
 # Generate paired images for finetune
 PYTHONPATH=. python font2img_finetune.py
 
-# Read images, split and convert to numpy arrays, save to pickles
-PYTHONPATH=. python package.py --dir=data/paired_images_finetune \
-                               --save_dir=experiments_finetune/data \
-                               --split_ratio=0.01
 
 # Train/Finetune the model
 PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
                 --experiment_id=0 \
                 --batch_size=16 \
-                --lr=0.0001 \
-                --epoch=2 \
-                --sample_steps=2 \
+                --lr=0.001 \
+                --epoch=10 \
+                --sample_steps=1 \
                 --schedule=20 \
                 --L1_penalty=100 \
                 --Lconst_penalty=15 \
