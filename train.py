@@ -43,6 +43,10 @@ parser.add_argument('--sample_steps', type=int, default=20,
                     help='number of batches in between two samples are drawn from validation set')
 parser.add_argument('--checkpoint_steps', type=int, default=50,
                     help='number of batches in between two checkpoints')
+parser.add_argument('--validate_steps', type=int, default=1,
+                    help='number of batches in between two validations')
+parser.add_argument('--validate_batches', type=int, default=20,
+                    help='validation epochs')
 parser.add_argument('--flip_labels', type=int, default=None,
                     help='whether flip training data labels or not, in fine tuning')
 args = parser.parse_args()
@@ -55,7 +59,8 @@ def main(_):
     with tf.Session(config=config) as sess:
         model = UNet(args.experiment_dir, batch_size=args.batch_size, experiment_id=args.experiment_id,
                      input_width=args.image_size, output_width=args.image_size, embedding_num=args.embedding_num,
-                     embedding_dim=args.embedding_dim, L1_penalty=args.L1_penalty, Lconst_penalty=args.Lconst_penalty,
+                     validate_batches=args.validate_batches, embedding_dim=args.embedding_dim,
+                     L1_penalty=args.L1_penalty, Lconst_penalty=args.Lconst_penalty,
                      Ltv_penalty=args.Ltv_penalty, Lcategory_penalty=args.Lcategory_penalty)
         model.register_session(sess)
         if args.flip_labels:
@@ -68,8 +73,10 @@ def main(_):
             fine_tune_list = set([int(i) for i in ids])
 
         model.train(lr=args.lr, epoch=args.epoch, resume=args.resume, resume_pre_model=args.resume_pre_model,
-                    schedule=args.schedule, freeze_encoder_decoder=args.freeze_encoder_decoder, fine_tune=fine_tune_list,
+                    schedule=args.schedule, freeze_encoder_decoder=args.freeze_encoder_decoder,
+                    fine_tune=fine_tune_list,
                     sample_steps=args.sample_steps, checkpoint_steps=args.checkpoint_steps,
+                    validate_steps=args.validate_steps,
                     flip_labels=args.flip_labels, optimizer=args.optimizer)
 
 

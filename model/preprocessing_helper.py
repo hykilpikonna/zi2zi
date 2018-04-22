@@ -8,8 +8,8 @@ from PIL import ImageDraw
 
 from model.utils import save_concat_images
 
-CANVAS_SIZE = 128
-CHAR_SIZE = 105
+CANVAS_SIZE = 256
+CHAR_SIZE = 220
 EMBEDDING_DIM = 128
 
 
@@ -31,7 +31,7 @@ def draw_single_char(img, canvas_size, char_size):
     width, height = img.size
     factor = width * 1.0 / char_size
 
-    max_height = canvas_size + 30
+    max_height = canvas_size * 2
     if height / factor > max_height:  # too long
         img = img.crop((0, 0, width, int(max_height * factor)))
     if height / factor > char_size + 5:  # CANVAS_SIZE/CHAR_SIZE is a benchmark, height should be less
@@ -95,8 +95,8 @@ def draw_example_src_only(ch, src_font, dst_img, canvas_size, char_size):
 
 
 if __name__ == '__main__':
-    src_font = "/Users/chaopan/Downloads/shouxiezhongwenziti/shouxiezhongwenziti/µÁƒ‘ ÷–¥◊÷ÃÂ/ ÈÃÂ∑ª∞≤æ∞≥º∏÷± –– È.ttf"
+    src_font = "/Users/chaopan/PycharmProjects/zi2zi/data/raw_fonts/造字工房尚黑纤细超长体.ttf"
     print(os.path.isfile(src_font))
     src_font = ImageFont.truetype(src_font, size=CHAR_SIZE)
-    src_img = draw_single_char_by_font('帅', src_font, CANVAS_SIZE, CHAR_SIZE)
+    src_img = draw_single_char_by_font('普', src_font, CANVAS_SIZE, CHAR_SIZE)
     src_img.show()

@@ -5,7 +5,7 @@ PYTHONPATH=. python font2img.py
 # Train the model
 PYTHONPATH=. python train.py --experiment_dir=experiments \
                 --experiment_id=0 \
-                --batch_size=128 \
+                --batch_size=64 \
                 --lr=0.001 \
                 --epoch=40 \
                 --sample_steps=50 \

@@ -1,5 +1,4 @@
 import os
-import pdb
 import time
 from collections import namedtuple
 
@@ -24,7 +23,8 @@ SummaryHandle = namedtuple("SummaryHandle", ["d_merged", "g_merged"])
 class UNet(object):
     def __init__(self, experiment_dir=None, experiment_id=0, batch_size=32, input_width=128, output_width=128,
                  generator_dim=64, discriminator_dim=64, L1_penalty=100, Lconst_penalty=15, Ltv_penalty=0.0,
-                 Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=1, output_filters=1):
+                 Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=1, output_filters=1,
+                 validate_batches=2):
         self.experiment_dir = experiment_dir
         self.experiment_id = experiment_id
         self.batch_size = batch_size
@@ -40,6 +40,7 @@ class UNet(object):
         self.embedding_dim = embedding_dim
         self.input_filters = input_filters
         self.output_filters = output_filters
+        self.validate_batches = validate_batches
         # init all the directories
         self.sess = None
         # experiment_dir is needed for training
@@ -385,11 +386,12 @@ class UNet(object):
                                                 })
         return fake_images, real_images, d_loss, g_loss, l1_loss
 
-    def validate_model(self, val_iter, epoch, step):
+    def generate_samples(self, val_iter, epoch, step):
         labels, images = next(val_iter)
+
         fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(images, labels)
         print("Sample: d_loss: %.5f, g_loss: %.5f, l1_loss: %.5f" % (d_loss, g_loss, l1_loss))
-        # TODO: Chao - without batch size
+
         merged_fake_images = merge(scale_back(fake_imgs), [-1, 1])
         merged_real_images = merge(scale_back(real_imgs), [-1, 1])
         merged_pair = np.concatenate([merged_real_images, merged_fake_images], axis=1)
@@ -402,6 +404,26 @@ class UNet(object):
 
         sample_img_path = os.path.join(model_sample_dir, "sample_%02d_%04d.png" % (epoch, step))
         misc.imsave(sample_img_path, merged_pair)
+
+    def validate_model(self, val_iter, step, test_writer):
+        print("Validating model..")
+        d_losses = []
+        g_losses = []
+        l1_losses = []
+        for _ in range(self.validate_batches):
+            labels, images = next(val_iter)
+
+            fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(images, labels)
+            d_losses.append(d_loss)
+            g_losses.append(g_loss)
+            l1_losses.append(l1_loss)
+
+        d_loss = np.mean(d_losses)
+        g_loss = np.mean(g_losses)
+        l1_loss = np.mean(l1_losses)
+        test_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="d_loss", simple_value=d_loss)]), step)
+        test_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="g_loss", simple_value=g_loss)]), step)
+        test_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="l1_loss", simple_value=l1_loss)]), step)
 
     def export_generator(self, save_dir, model_dir, model_name="gen_model"):
         saver = tf.train.Saver()
@@ -518,7 +540,8 @@ class UNet(object):
             self.sess.run(op)
 
     def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, resume_pre_model=True, flip_labels=False,
-              freeze_encoder_decoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500, optimizer="adam"):
+              freeze_encoder_decoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500, validate_steps=100,
+              optimizer="adam"):
         g_vars, d_vars = self.retrieve_trainable_vars(freeze_encoder_decoder=freeze_encoder_decoder)
         input_handle, loss_handle, _, summary_handle = self.retrieve_handles()
         if not self.sess:
@@ -550,7 +573,8 @@ class UNet(object):
         val_batch_iter = data_provider.get_val_iter(self.batch_size)
 
         saver = tf.train.Saver(max_to_keep=3)
-        summary_writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
+        train_writer = tf.summary.FileWriter(self.log_dir + '/train', self.sess.graph)
+        test_writer = tf.summary.FileWriter(self.log_dir + '/test', self.sess.graph)
 
         if resume:
             _, model_dir = self.get_model_id_and_dir()
@@ -625,12 +649,15 @@ class UNet(object):
                              "category_loss: %.5f, cheat_loss: %.5f, const_loss: %.5f, l1_loss: %.5f, tv_loss: %.5f"
                 print(log_format % (ei, bid, total_batches, passed, batch_d_loss, batch_g_loss,
                                     category_loss, cheat_loss, const_loss, l1_loss, tv_loss))
-                summary_writer.add_summary(d_summary, counter)
-                summary_writer.add_summary(g_summary, counter)
+                train_writer.add_summary(d_summary, counter)
+                train_writer.add_summary(g_summary, counter)
+
+                if counter % validate_steps == 0:
+                    self.validate_model(val_batch_iter, counter, test_writer)
 
                 if counter % sample_steps == 0:
                     # sample the current model states with val data
-                    self.validate_model(val_batch_iter, ei, counter)
+                    self.generate_samples(val_batch_iter, ei, counter)
 
                 if counter % checkpoint_steps == 0:
                     print("Checkpoint: save checkpoint step %d" % counter)
