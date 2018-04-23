@@ -131,7 +131,7 @@ class UNet(object):
             d7 = decode_layer(d6, s2, self.generator_dim, layer=7, enc_layer=encoding_layers["e1"])
             d8 = decode_layer(d7, s, self.output_filters, layer=8, enc_layer=None, do_concat=False)
 
-            output = tf.nn.sigmoid(d8)  # scale to  (0,1)
+            output = tf.nn.tanh(d8)  # scale to (-1, 1), saying better than sigmoid
             return output
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
@@ -421,9 +421,11 @@ class UNet(object):
         d_loss = np.mean(d_losses)
         g_loss = np.mean(g_losses)
         l1_loss = np.mean(l1_losses)
-        test_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="d_loss", simple_value=d_loss)]), step)
-        test_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="g_loss", simple_value=g_loss)]), step)
-        test_writer.add_summary(tf.Summary(value=[tf.Summary.Value(tag="l1_loss", simple_value=l1_loss)]), step)
+        test_writer.add_summary(tf.Summary(value=[
+            tf.Summary.Value(tag="d_loss", simple_value=d_loss),
+            tf.Summary.Value(tag="g_loss", simple_value=g_loss),
+            tf.Summary.Value(tag="l1_loss", simple_value=l1_loss)
+        ]), step)
 
     def export_generator(self, save_dir, model_dir, model_name="gen_model"):
         saver = tf.train.Saver()

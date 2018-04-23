@@ -27,7 +27,7 @@ def normalize_image(img):
     """
     Make image zero centered and in between (-1, 1)
     """
-    normalized = img / 255.
+    normalized = (img / 127.5) - 1.
     return normalized
 
 
@@ -47,7 +47,7 @@ def shift_and_resize_image(img, shift_x, shift_y, nw, nh):
 
 
 def scale_back(images):
-    return images * 255.
+    return (images + 1.) / 2.
 
 
 def merge(images, size):

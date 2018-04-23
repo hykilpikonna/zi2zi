@@ -12,7 +12,7 @@ parser.add_argument('--src_font', default="data/raw_fonts/SimSun.ttf", help='pat
 parser.add_argument('--image_basename_path',
                     default="handwriting_preparation/images/test_image",
                     help='path of the handwritten image (box file should be in the same folders)')
-parser.add_argument('--embedding_id', type=int, default=185, help='embedding id')
+parser.add_argument('--embedding_id', type=int, default=136, help='embedding id')
 parser.add_argument('--sample_dir', default='data/paired_images_finetune', help='directory to save examples')
 parser.add_argument('--resample', type=int, default=1, help='sample with replacement')
 
