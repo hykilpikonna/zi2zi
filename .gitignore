@@ -3,7 +3,6 @@ datasets/
 .DS_Store
 .idea/
 paired_images/
-raw_fonts/
 checkpoint/
 experiments/data/
 experiments/

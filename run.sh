@@ -1,6 +1,14 @@
-# Sample draw the fonts and save to paired_images
+##########################
+## PreProcess
+##########################
+
+# Sample draw the fonts and save to paired_images, about 10-20 mins
 PYTHONPATH=. python font2img.py
 
+
+##########################
+## Train and Infer
+##########################
 
 # Train the model
 PYTHONPATH=. python train.py --experiment_dir=experiments \

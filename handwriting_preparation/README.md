@@ -13,7 +13,7 @@
 * Download **jTessBoxEditor** from`http://vietocr.sourceforge.net/training.html`
     * Launch jTessBoxEditor, and load your .jpg along with your .box. Note that the basename of the two files have to be the same.
     * Correct your Box results, and save it. The next step will crop the image according to your corrected Box file, as training data.
-    * A screenshot is here ![alt text](handwriting_preparation/screenshot/Screen Shot jTessBoxEditor.png)
+    * A screenshot is here ![alt text](assets/jTessBoxEditor.png)
 
 ## 3. Generate paired_images
 * Make sure the parameters in the scripts are right and then `cd ..; PYTHONPATH=/ python font2img_finetune.py`
