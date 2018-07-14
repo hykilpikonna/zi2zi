@@ -1,15 +1,14 @@
-# -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import absolute_import
-
-import tensorflow as tf
-import numpy as np
-import scipy.misc as misc
 import os
 import time
 from collections import namedtuple
+
+import numpy as np
+import tensorflow as tf
+from scipy import misc
+
+from model.preprocessing_helper import save_imgs
+from .dataset import TrainDataProvider, InjectDataProvider
 from .ops import conv2d, deconv2d, lrelu, fc, batch_norm, init_embedding, conditional_instance_norm
-from .dataset import TrainDataProvider, InjectDataProvider, NeverEndingLoopingProvider
 from .utils import scale_back, merge, save_concat_images
 
 # Auxiliary wrapper classes
@@ -22,9 +21,10 @@ SummaryHandle = namedtuple("SummaryHandle", ["d_merged", "g_merged"])
 
 
 class UNet(object):
-    def __init__(self, experiment_dir=None, experiment_id=0, batch_size=16, input_width=256, output_width=256,
+    def __init__(self, experiment_dir=None, experiment_id=0, batch_size=32, input_width=128, output_width=128,
                  generator_dim=64, discriminator_dim=64, L1_penalty=100, Lconst_penalty=15, Ltv_penalty=0.0,
-                 Lcategory_penalty=1.0, embedding_num=40, embedding_dim=128, input_filters=3, output_filters=3):
+                 Lcategory_penalty=1.0, embedding_num=80, embedding_dim=64, input_filters=1, output_filters=1,
+                 validate_batches=2):
         self.experiment_dir = experiment_dir
         self.experiment_id = experiment_id
         self.batch_size = batch_size
@@ -40,6 +40,7 @@ class UNet(object):
         self.embedding_dim = embedding_dim
         self.input_filters = input_filters
         self.output_filters = output_filters
+        self.validate_batches = validate_batches
         # init all the directories
         self.sess = None
         # experiment_dir is needed for training
@@ -48,6 +49,7 @@ class UNet(object):
             self.checkpoint_dir = os.path.join(self.experiment_dir, "checkpoint")
             self.sample_dir = os.path.join(self.experiment_dir, "sample")
             self.log_dir = os.path.join(self.experiment_dir, "logs")
+            self.save_dir = os.path.join(self.experiment_dir, "save_dir")
 
             if not os.path.exists(self.checkpoint_dir):
                 os.makedirs(self.checkpoint_dir)
@@ -58,6 +60,9 @@ class UNet(object):
             if not os.path.exists(self.sample_dir):
                 os.makedirs(self.sample_dir)
                 print("create sample directory")
+            if not os.path.exists(self.sample_dir):
+                os.makedirs(self.sample_dir)
+                print("create save directory")
 
     def encoder(self, images, is_training, reuse=False):
         with tf.variable_scope("generator"):
@@ -66,10 +71,12 @@ class UNet(object):
 
             encode_layers = dict()
 
+            # TODO: Chao - add more conv option, maxpooling
             def encode_layer(x, output_filters, layer):
                 act = lrelu(x)
                 conv = conv2d(act, output_filters=output_filters, scope="g_e%d_conv" % layer)
                 enc = batch_norm(conv, is_training, scope="g_e%d_bn" % layer)
+
                 encode_layers["e%d" % layer] = enc
                 return enc
 
@@ -93,9 +100,10 @@ class UNet(object):
             s = self.output_width
             s2, s4, s8, s16, s32, s64, s128 = int(s / 2), int(s / 4), int(s / 8), int(s / 16), int(s / 32), int(
                 s / 64), int(s / 128)
+            batch_size = tf.shape(encoded)[0]
 
             def decode_layer(x, output_width, output_filters, layer, enc_layer, dropout=False, do_concat=True):
-                dec = deconv2d(tf.nn.relu(x), [self.batch_size, output_width,
+                dec = deconv2d(tf.nn.relu(x), [batch_size, output_width,
                                                output_width, output_filters], scope="g_d%d_deconv" % layer)
                 if layer != 8:
                     # IMPORTANT: normalization for last layer
@@ -123,14 +131,14 @@ class UNet(object):
             d7 = decode_layer(d6, s2, self.generator_dim, layer=7, enc_layer=encoding_layers["e1"])
             d8 = decode_layer(d7, s, self.output_filters, layer=8, enc_layer=None, do_concat=False)
 
-            output = tf.nn.tanh(d8)  # scale to (-1, 1)
+            output = tf.nn.tanh(d8)  # scale to (-1, 1), saying better than sigmoid
             return output
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
         e8, enc_layers = self.encoder(images, is_training=is_training, reuse=reuse)
-        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids)
-        local_embeddings = tf.reshape(local_embeddings, [self.batch_size, 1, 1, self.embedding_dim])
-        embedded = tf.concat([e8, local_embeddings], 3)
+        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids)  # category embedding
+        local_embeddings = tf.reshape(local_embeddings, [-1, 1, 1, self.embedding_dim])
+        embedded = tf.concat([e8, local_embeddings], 3)  # encoded character + category embedding
         output = self.decoder(embedded, enc_layers, embedding_ids, inst_norm, is_training=is_training, reuse=reuse)
         return output, e8
 
@@ -146,20 +154,22 @@ class UNet(object):
             h3 = lrelu(batch_norm(conv2d(h2, self.discriminator_dim * 8, sh=1, sw=1, scope="d_h3_conv"),
                                   is_training, scope="d_bn_3"))
             # real or fake binary loss
-            fc1 = fc(tf.reshape(h3, [self.batch_size, -1]), 1, scope="d_fc1")
+            h3_shapes = h3.get_shape().as_list()
+
+            fc1 = fc(tf.reshape(h3, [-1, np.prod(h3_shapes[1:])]), 1, scope="d_fc1")
             # category loss
-            fc2 = fc(tf.reshape(h3, [self.batch_size, -1]), self.embedding_num, scope="d_fc2")
+            fc2 = fc(tf.reshape(h3, [-1, np.prod(h3_shapes[1:])]), self.embedding_num, scope="d_fc2")
 
             return tf.nn.sigmoid(fc1), fc1, fc2
 
     def build_model(self, is_training=True, inst_norm=False, no_target_source=False):
         real_data = tf.placeholder(tf.float32,
-                                   [self.batch_size, self.input_width, self.input_width,
+                                   [None, self.input_width, self.input_width,
                                     self.input_filters + self.output_filters],
                                    name='real_A_and_B_images')
         embedding_ids = tf.placeholder(tf.int64, shape=None, name="embedding_ids")
         no_target_data = tf.placeholder(tf.float32,
-                                        [self.batch_size, self.input_width, self.input_width,
+                                        [None, self.input_width, self.input_width,
                                          self.input_filters + self.output_filters],
                                         name='no_target_A_and_B_images')
         no_target_ids = tf.placeholder(tf.int64, shape=None, name="no_target_embedding_ids")
@@ -172,6 +182,7 @@ class UNet(object):
         embedding = init_embedding(self.embedding_num, self.embedding_dim)
         fake_B, encoded_real_A = self.generator(real_A, embedding, embedding_ids, is_training=is_training,
                                                 inst_norm=inst_norm)
+        # Note: Chao - P(A, B) = P(B|A)*P(A)
         real_AB = tf.concat([real_A, real_B], 3)
         fake_AB = tf.concat([real_A, fake_B], 3)
 
@@ -188,7 +199,7 @@ class UNet(object):
 
         # category loss
         true_labels = tf.reshape(tf.one_hot(indices=embedding_ids, depth=self.embedding_num),
-                                 shape=[self.batch_size, self.embedding_num])
+                                 shape=[-1, self.embedding_num])
         real_category_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=real_category_logits,
                                                                                     labels=true_labels))
         fake_category_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_category_logits,
@@ -224,7 +235,7 @@ class UNet(object):
                                                               is_training=is_training,
                                                               inst_norm=inst_norm, reuse=True)
             no_target_labels = tf.reshape(tf.one_hot(indices=no_target_ids, depth=self.embedding_num),
-                                          shape=[self.batch_size, self.embedding_num])
+                                          shape=[-1, self.embedding_num])
             no_target_AB = tf.concat([no_target_A, no_target_B], 3)
             no_target_D, no_target_D_logits, no_target_category_logits = self.discriminator(no_target_AB,
                                                                                             is_training=is_training,
@@ -297,16 +308,17 @@ class UNet(object):
     def register_session(self, sess):
         self.sess = sess
 
-    def retrieve_trainable_vars(self, freeze_encoder=False):
+    def retrieve_trainable_vars(self, freeze_encoder_decoder=False):
         t_vars = tf.trainable_variables()
 
         d_vars = [var for var in t_vars if 'd_' in var.name]
         g_vars = [var for var in t_vars if 'g_' in var.name]
 
-        if freeze_encoder:
+        if freeze_encoder_decoder:
             # exclude encoder weights
-            print("freeze encoder weights")
-            g_vars = [var for var in g_vars if not ("g_e" in var.name)]
+            print("freeze encoder/decoder weights")
+            g_vars = [var for var in t_vars if "embedding" in var.name]
+            d_vars = [var for var in d_vars if "d_fc" in var.name]
 
         return g_vars, d_vars
 
@@ -324,7 +336,7 @@ class UNet(object):
         return input_handle, loss_handle, eval_handle, summary_handle
 
     def get_model_id_and_dir(self):
-        model_id = "experiment_%d_batch_%d" % (self.experiment_id, self.batch_size)
+        model_id = "experiment_%d" % self.experiment_id
         model_dir = os.path.join(self.checkpoint_dir, model_id)
         return model_id, model_dir
 
@@ -347,6 +359,17 @@ class UNet(object):
         else:
             print("fail to restore model %s" % model_dir)
 
+    def restore_pre_model(self, saver, model_dir):
+        """
+        restore the pretraind model
+        """
+        ckpt = tf.train.get_checkpoint_state(model_dir)
+        if ckpt:
+            saver.restore(self.sess, ckpt.model_checkpoint_path)
+            print("restored the pre-trainde model %s" % model_dir)
+        else:
+            print("fail to restore model %s" % model_dir)
+
     def generate_fake_samples(self, input_images, embedding_ids):
         input_handle, loss_handle, eval_handle, summary_handle = self.retrieve_handles()
         fake_images, real_images, \
@@ -363,13 +386,14 @@ class UNet(object):
                                                 })
         return fake_images, real_images, d_loss, g_loss, l1_loss
 
-    def validate_model(self, val_iter, epoch, step):
+    def generate_samples(self, val_iter, epoch, step):
         labels, images = next(val_iter)
+
         fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(images, labels)
         print("Sample: d_loss: %.5f, g_loss: %.5f, l1_loss: %.5f" % (d_loss, g_loss, l1_loss))
 
-        merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])
-        merged_real_images = merge(scale_back(real_imgs), [self.batch_size, 1])
+        merged_fake_images = merge(scale_back(fake_imgs), [-1, 1])
+        merged_real_images = merge(scale_back(real_imgs), [-1, 1])
         merged_pair = np.concatenate([merged_real_images, merged_fake_images], axis=1)
 
         model_id, _ = self.get_model_id_and_dir()
@@ -380,6 +404,28 @@ class UNet(object):
 
         sample_img_path = os.path.join(model_sample_dir, "sample_%02d_%04d.png" % (epoch, step))
         misc.imsave(sample_img_path, merged_pair)
+
+    def validate_model(self, val_iter, step, test_writer):
+        print("Validating model..")
+        d_losses = []
+        g_losses = []
+        l1_losses = []
+        for _ in range(self.validate_batches):
+            labels, images = next(val_iter)
+
+            fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(images, labels)
+            d_losses.append(d_loss)
+            g_losses.append(g_loss)
+            l1_losses.append(l1_loss)
+
+        d_loss = np.mean(d_losses)
+        g_loss = np.mean(g_losses)
+        l1_loss = np.mean(l1_losses)
+        test_writer.add_summary(tf.Summary(value=[
+            tf.Summary.Value(tag="d_loss", simple_value=d_loss),
+            tf.Summary.Value(tag="g_loss", simple_value=g_loss),
+            tf.Summary.Value(tag="l1_loss", simple_value=l1_loss)
+        ]), step)
 
     def export_generator(self, save_dir, model_dir, model_name="gen_model"):
         saver = tf.train.Saver()
@@ -397,28 +443,30 @@ class UNet(object):
         else:
             source_iter = source_provider.get_random_embedding_iter(self.batch_size, embedding_ids)
 
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
-        self.restore_model(saver, model_dir)
-
-        def save_imgs(imgs, count):
-            p = os.path.join(save_dir, "inferred_%04d.png" % count)
-            save_concat_images(imgs, img_path=p)
-            print("generated images saved at %s" % p)
+        self.load_model(model_dir)
 
         count = 0
         batch_buffer = list()
         for labels, source_imgs in source_iter:
-            fake_imgs = self.generate_fake_samples(source_imgs, labels)[0]
+            fake_imgs, real_imgs, d_loss, g_loss, l1_loss = self.generate_fake_samples(source_imgs, labels)
+
             merged_fake_images = merge(scale_back(fake_imgs), [self.batch_size, 1])
-            batch_buffer.append(merged_fake_images)
+            merged_real_images = merge(scale_back(real_imgs), [self.batch_size, 1])
+            merged_pair = np.concatenate([merged_real_images, merged_fake_images], axis=1)
+
+            batch_buffer.append(merged_pair)
             if len(batch_buffer) == 10:
-                save_imgs(batch_buffer, count)
+                save_imgs(batch_buffer, count, save_dir)
                 batch_buffer = list()
             count += 1
         if batch_buffer:
             # last batch
-            save_imgs(batch_buffer, count)
+            save_imgs(batch_buffer, count, save_dir)
+
+    def load_model(self, model_dir):
+        tf.global_variables_initializer().run()
+        saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
+        self.restore_model(saver, model_dir)
 
     def interpolate(self, source_obj, between, model_dir, save_dir, steps):
         tf.global_variables_initializer().run()
@@ -493,18 +541,29 @@ class UNet(object):
             op = tf.assign(var, val, validate_shape=False)
             self.sess.run(op)
 
-    def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, flip_labels=False,
-              freeze_encoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500):
-        g_vars, d_vars = self.retrieve_trainable_vars(freeze_encoder=freeze_encoder)
+    def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, resume_pre_model=True, flip_labels=False,
+              freeze_encoder_decoder=False, fine_tune=None, sample_steps=50, checkpoint_steps=500, validate_steps=100,
+              optimizer="adam"):
+        g_vars, d_vars = self.retrieve_trainable_vars(freeze_encoder_decoder=freeze_encoder_decoder)
         input_handle, loss_handle, _, summary_handle = self.retrieve_handles()
-
         if not self.sess:
             raise Exception("no session registered")
 
         learning_rate = tf.placeholder(tf.float32, name="learning_rate")
-        d_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5).minimize(loss_handle.d_loss, var_list=d_vars)
-        g_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5).minimize(loss_handle.g_loss, var_list=g_vars)
-        tf.global_variables_initializer().run()
+
+        if optimizer.lower() == "adam":
+            _d_optimizier = tf.train.AdamOptimizer(learning_rate, beta1=0.5)
+            _g_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5)
+        elif optimizer.lower() == "sgd":
+            _d_optimizier = tf.train.GradientDescentOptimizer(learning_rate)
+            _g_optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+        else:
+            raise ValueError("Unknown optimizer: %s" % optimizer)
+
+        d_optimizer = _d_optimizier.minimize(loss_handle.d_loss, var_list=d_vars)
+        g_optimizer = _g_optimizer.minimize(loss_handle.g_loss, var_list=g_vars)
+
+        self.sess.run(tf.global_variables_initializer())
         real_data = input_handle.real_data
         embedding_ids = input_handle.embedding_ids
         no_target_data = input_handle.no_target_data
@@ -516,11 +575,18 @@ class UNet(object):
         val_batch_iter = data_provider.get_val_iter(self.batch_size)
 
         saver = tf.train.Saver(max_to_keep=3)
-        summary_writer = tf.summary.FileWriter(self.log_dir, self.sess.graph)
+        train_writer = tf.summary.FileWriter(self.log_dir + '/train', self.sess.graph)
+        test_writer = tf.summary.FileWriter(self.log_dir + '/test', self.sess.graph)
 
         if resume:
             _, model_dir = self.get_model_id_and_dir()
             self.restore_model(saver, model_dir)
+
+        if resume_pre_model:
+            pre_saver = tf.train.Saver(g_vars)
+            _, pre_model_dir = self.get_model_id_and_dir()
+            self.restore_pre_model(pre_saver, pre_model_dir)
+            print("resume the pre-trained model.....")
 
         current_lr = lr
         counter = 0
@@ -585,12 +651,15 @@ class UNet(object):
                              "category_loss: %.5f, cheat_loss: %.5f, const_loss: %.5f, l1_loss: %.5f, tv_loss: %.5f"
                 print(log_format % (ei, bid, total_batches, passed, batch_d_loss, batch_g_loss,
                                     category_loss, cheat_loss, const_loss, l1_loss, tv_loss))
-                summary_writer.add_summary(d_summary, counter)
-                summary_writer.add_summary(g_summary, counter)
+                train_writer.add_summary(d_summary, counter)
+                train_writer.add_summary(g_summary, counter)
+
+                if counter % validate_steps == 0:
+                    self.validate_model(val_batch_iter, counter, test_writer)
 
                 if counter % sample_steps == 0:
                     # sample the current model states with val data
-                    self.validate_model(val_batch_iter, ei, counter)
+                    self.generate_samples(val_batch_iter, ei, counter)
 
                 if counter % checkpoint_steps == 0:
                     print("Checkpoint: save checkpoint step %d" % counter)

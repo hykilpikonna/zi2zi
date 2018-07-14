@@ -1,5 +1,14 @@
 *.pyc
 datasets/
-experiments/
 .DS_Store
 .idea/
+paired_images/
+checkpoint/
+experiments/data/
+experiments/
+data/paired_images_finetune/
+save_dir/
+handwriting_preparation/characters/
+chi_sim.traineddata
+osd.traineddata
+experiments_finetune/

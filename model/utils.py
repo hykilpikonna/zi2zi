@@ -1,14 +1,12 @@
 # -*- coding: utf-8 -*-
-from __future__ import print_function
-from __future__ import absolute_import
 
-import os
 import glob
+import os
+from io import BytesIO
 
 import imageio
-import scipy.misc as misc
 import numpy as np
-from cStringIO import StringIO
+import scipy.misc as misc
 
 
 def pad_seq(seq, batch_size):
@@ -22,7 +20,7 @@ def pad_seq(seq, batch_size):
 
 
 def bytes_to_file(bytes_img):
-    return StringIO(bytes_img)
+    return BytesIO(bytes_img)
 
 
 def normalize_image(img):
@@ -34,17 +32,16 @@ def normalize_image(img):
 
 
 def read_split_image(img):
-    mat = misc.imread(img).astype(np.float)
+    mat = misc.imread(img, flatten=True).astype(np.float32)
     side = int(mat.shape[1] / 2)
     assert side * 2 == mat.shape[1]
     img_A = mat[:, :side]  # target
     img_B = mat[:, side:]  # source
-
     return img_A, img_B
 
 
 def shift_and_resize_image(img, shift_x, shift_y, nw, nh):
-    w, h, _ = img.shape
+    w, h = img.shape
     enlarged = misc.imresize(img, [nw, nh])
     return enlarged[shift_x:shift_x + w, shift_y:shift_y + h]
 
@@ -55,6 +52,9 @@ def scale_back(images):
 
 def merge(images, size):
     h, w = images.shape[1], images.shape[2]
+    if size[0] == -1:
+        assert len(images.shape) == 4  # images = (N, 128, 128, 1)
+        size[0] = images.shape[0]
     img = np.zeros((h * size[0], w * size[1], 3))
     for idx, image in enumerate(images):
         i = idx % size[1]
