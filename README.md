@@ -1,10 +1,98 @@
-# zi2zi: Master Chinese Calligraphy with Conditional Adversarial Networks
+# zi2zi (forked): Master Chinese Calligraphy with Conditional Adversarial Networks
 
-[![Insight.io](https://insight.io/repoBadge/github.com/kaonashi-tyc/zi2zi)](https://insight.io/github.com/kaonashi-tyc/zi2zi)
+## Major Updates from Original repo:
+* Use Grayscale images which largely improves the training speed
+* Provide training data and preprocess script to prepare them
+* An OCR toolkit based on Tesseract and jTessBoxEditor, which allows you to take a picture of your handwritings and use it as finetuning data
+* Script to finetune handwritings and learn the style within few shots
 
-<p align="center">
-  <img src="assets/intro.gif" alt="animation", style="width: 350px;"/>
-</p>
+## Requirements
+* Python 3
+* Tensorflow 1.8
+
+
+## Usage
+You can follow the steps below or simply run `run.sh` 
+
+```
+##########################
+## PreProcess
+##########################
+
+# Sample draw the fonts and save to paired_images, about 10-20 mins
+PYTHONPATH=. python font2img.py
+
+
+##########################
+## Train and Infer
+##########################
+
+# Train the model
+PYTHONPATH=. python train.py --experiment_dir=experiments \
+                --experiment_id=0 \
+                --batch_size=64 \
+                --lr=0.001 \
+                --epoch=40 \
+                --sample_steps=50 \
+                --schedule=20 \
+                --L1_penalty=100 \
+                --Lconst_penalty=15
+
+# Infer
+PYTHONPATH=. python infer.py --model_dir=experiments/checkpoint/experiment_0_batch_32 \
+                --batch_size=32 \
+                --source_obj=experiments/data/val.obj \
+                --embedding_ids=0 \
+                --save_dir=save_dir/
+
+##########################
+## Finetune
+##########################
+
+# Generate paired images for finetune
+PYTHONPATH=. python font2img_finetune.py
+
+
+# Train/Finetune the model
+PYTHONPATH=. python train.py --experiment_dir=experiments_finetune \
+                --experiment_id=0 \
+                --batch_size=16 \
+                --lr=0.001 \
+                --epoch=10 \
+                --sample_steps=1 \
+                --schedule=20 \
+                --L1_penalty=100 \
+                --Lconst_penalty=15 \
+                --freeze_encoder_decoder=1 \
+                --optimizer=sgd \
+                --fine_tune=67 \
+                --flip_labels=1
+
+PYTHONPATH=. python infer.py --model_dir=experiments_finetune/checkpoint/experiment_0 \
+                --batch_size=32 \
+                --source_obj=experiments_finetune/data/val.obj \
+                --embedding_id=67 \
+                --save_dir=save_dir/
+
+
+
+PYTHONPATH=. python infer_by_text.py --model_dir=experiments_finetune/checkpoint/experiment_0 \
+                --batch_size=32 \
+                --embedding_id=67 \
+                --save_dir=save_dir/
+```
+
+To see how to prepare the **finetuning data**, please take a look at `handwriting_preparation/README.md`, which introduces how to use tesseract and jTessBoxEditor in details.
+
+ 
+  
+
+
+
+####################################################################
+#########  Below are the README from original repo author ########
+###################################################################
+
 
 ## Introduction
 Learning eastern asian language typefaces with GAN. zi2zi(字到字, meaning from character to character) is an application and extension of the recent popular [pix2pix](https://github.com/phillipi/pix2pix) model to Chinese characters.
