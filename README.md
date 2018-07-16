@@ -69,7 +69,15 @@ PYTHONPATH=. python infer.py --model_dir=experiments/checkpoint/experiment_0_bat
                 --source_obj=experiments/data/val.obj \
                 --embedding_ids=0 \
                 --save_dir=save_dir/
+```
 
+To see how to prepare the **your handwrittings**, please take a look at [handwriting_preparation/README.md](), which introduces how to use tesseract and jTessBoxEditor for details.
+
+<p align="center">
+  <img src="assets/jTessBoxEditor.png" alt="animation",  width="600"/>
+</p>
+
+```
 ##########################
 ## Finetune
 ##########################
@@ -107,7 +115,7 @@ PYTHONPATH=. python infer_by_text.py --model_dir=experiments_finetune/checkpoint
                 --save_dir=save_dir/
 ```
 
-To see how to prepare the **finetuning data**, please take a look at `handwriting_preparation/README.md`, which introduces how to use tesseract and jTessBoxEditor in details.
+
 
 
 ## Related Projects
