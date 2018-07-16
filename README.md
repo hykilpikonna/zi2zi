@@ -14,11 +14,11 @@
 Below are the screenshot of GAN-generated samples at Step 9000. The left side is the ground truth, and the right side is the GAN-generated samples for a given font. You can tell the conditional GAN did learn some stylistic features of a given font.
 
 <p align="center">
-  <img src="assets/sample1.png" alt="animation",  width="300"/>
+  <img src="assets/sample1.png" alt="animation",  width="200"/>
 </p>
 
 <p align="center">
-  <img src="assets/sample2.png" alt="animation",  width="300"/>
+  <img src="assets/sample2.png" alt="animation",  width="200"/>
 </p>
 
 
@@ -26,7 +26,9 @@ After model starts training, you can see samples and logs under `experiments/` f
 
 Here is a screenshot of the tensorboard, and according to validation error, Step 9000 is the recommended stop point for given training data. (You can add more hand-written fonts as training data, so as to train the model longer, **but one recommendation is: don't overfit**, otherwise the finetuning won't work). 
 
-![alt network](assets/tensorboard.png)
+<p align="center">
+  <img src="assets/tensorboard.png" alt="animation",  width="600"/>
+</p>
 
 
 ## Requirements
