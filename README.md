@@ -74,7 +74,7 @@ PYTHONPATH=. python infer.py --model_dir=experiments/checkpoint/experiment_0_bat
 To see how to prepare the **your handwrittings**, please take a look at [handwriting_preparation/README.md](), which introduces how to use tesseract and jTessBoxEditor for details.
 
 <p align="center">
-  <img src="assets/jTessBoxEditor.png" alt="animation",  width="600"/>
+  <img src="assets/jTessBoxEditor.png" alt="animation",  width="800"/>
 </p>
 
 ```
