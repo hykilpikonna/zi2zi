@@ -1,10 +1,33 @@
 # zi2zi (forked): Master Chinese Calligraphy with Conditional Adversarial Networks
 
 ## Major Updates from Original repo:
+* We all know GAN can generate **printed fonts** very well based on original repo, so we are curious how well can GAN learn on **handwritten fonts**. And whether it can learn our handwriting styles via finetuning.
 * Use Grayscale images which largely improves the training speed
-* Provide training data and preprocess script to prepare them
-* An OCR toolkit based on Tesseract and jTessBoxEditor, which allows you to take a picture of your handwritings and use it as finetuning data
+* Provide **training data** and preprocess script to prepare them
+* **Generate handwritten Chinese characters based on your own handwritings!!!** An OCR toolkit based on Tesseract and jTessBoxEditor, which allows you to take a picture of your handwritings and use it as finetuning data
 * Script to finetune handwritings and learn the style within few shots
+
+
+
+## Experiment Results
+
+Below are the screenshot of GAN-generated samples at Step 9000. The left side is the ground truth, and the right side is the GAN-generated samples for a given font. You can tell the conditional GAN did learn some stylistic features of a given font.
+
+<p align="center">
+  <img src="assets/sample1.png" alt="animation",  width="300"/>
+</p>
+
+<p align="center">
+  <img src="assets/sample2.png" alt="animation",  width="300"/>
+</p>
+
+
+After model starts training, you can see samples and logs under `experiments/` folder.
+
+Here is a screenshot of the tensorboard, and according to validation error, Step 9000 is the recommended stop point for given training data. (You can add more hand-written fonts as training data, so as to train the model longer, **but one recommendation is: don't overfit**, otherwise the finetuning won't work). 
+
+![alt network](assets/tensorboard.png)
+
 
 ## Requirements
 * Python 3
@@ -84,15 +107,16 @@ PYTHONPATH=. python infer_by_text.py --model_dir=experiments_finetune/checkpoint
 
 To see how to prepare the **finetuning data**, please take a look at `handwriting_preparation/README.md`, which introduces how to use tesseract and jTessBoxEditor in details.
 
- 
-  
 
+## Related Projects
+My feeling is CycleGan will perform better, as it doesn't require pairwise data, and supposedly can learn more abstractive structural features of fonts.
+You can take a look at [Generating Handwritten Chinese Characters using CycleGAN](https://arxiv.org/pdf/1801.08624.pdf) and its implementation at [https://github.com/changebo/HCCG-CycleGAN](https://github.com/changebo/HCCG-CycleGAN)
 
-
+#
 ####################################################################
 #########  Below are the README from original repo author ########
 ###################################################################
-
+#
 
 ## Introduction
 Learning eastern asian language typefaces with GAN. zi2zi(字到字, meaning from character to character) is an application and extension of the recent popular [pix2pix](https://github.com/phillipi/pix2pix) model to Chinese characters.
