@@ -2,9 +2,9 @@ import os
 import time
 from collections import namedtuple
 
+import imageio
 import numpy as np
 import tensorflow as tf
-from scipy import misc
 
 from model.preprocessing_helper import save_imgs
 from .dataset import TrainDataProvider, InjectDataProvider
@@ -65,9 +65,9 @@ class UNet(object):
                 print("create save directory")
 
     def encoder(self, images, is_training, reuse=False):
-        with tf.variable_scope("generator"):
+        with tf.compat.v1.variable_scope("generator"):
             if reuse:
-                tf.get_variable_scope().reuse_variables()
+                tf.compat.v1.get_variable_scope().reuse_variables()
 
             encode_layers = dict()
 
@@ -93,14 +93,14 @@ class UNet(object):
             return e8, encode_layers
 
     def decoder(self, encoded, encoding_layers, ids, inst_norm, is_training, reuse=False):
-        with tf.variable_scope("generator"):
+        with tf.compat.v1.variable_scope("generator"):
             if reuse:
-                tf.get_variable_scope().reuse_variables()
+                tf.compat.v1.get_variable_scope().reuse_variables()
 
             s = self.output_width
             s2, s4, s8, s16, s32, s64, s128 = int(s / 2), int(s / 4), int(s / 8), int(s / 16), int(s / 32), int(
                 s / 64), int(s / 128)
-            batch_size = tf.shape(encoded)[0]
+            batch_size = tf.shape(input=encoded)[0]
 
             def decode_layer(x, output_width, output_filters, layer, enc_layer, dropout=False, do_concat=True):
                 dec = deconv2d(tf.nn.relu(x), [batch_size, output_width,
@@ -116,7 +116,7 @@ class UNet(object):
                     else:
                         dec = batch_norm(dec, is_training, scope="g_d%d_bn" % layer)
                 if dropout:
-                    dec = tf.nn.dropout(dec, 0.5)
+                    dec = tf.nn.dropout(dec, rate=1 - (0.5))
                 if do_concat:
                     dec = tf.concat([dec, enc_layer], 3)
                 return dec
@@ -136,16 +136,16 @@ class UNet(object):
 
     def generator(self, images, embeddings, embedding_ids, inst_norm, is_training, reuse=False):
         e8, enc_layers = self.encoder(images, is_training=is_training, reuse=reuse)
-        local_embeddings = tf.nn.embedding_lookup(embeddings, ids=embedding_ids)  # category embedding
+        local_embeddings = tf.nn.embedding_lookup(params=embeddings, ids=embedding_ids)  # category embedding
         local_embeddings = tf.reshape(local_embeddings, [-1, 1, 1, self.embedding_dim])
         embedded = tf.concat([e8, local_embeddings], 3)  # encoded character + category embedding
         output = self.decoder(embedded, enc_layers, embedding_ids, inst_norm, is_training=is_training, reuse=reuse)
         return output, e8
 
     def discriminator(self, image, is_training, reuse=False):
-        with tf.variable_scope("discriminator"):
+        with tf.compat.v1.variable_scope("discriminator"):
             if reuse:
-                tf.get_variable_scope().reuse_variables()
+                tf.compat.v1.get_variable_scope().reuse_variables()
             h0 = lrelu(conv2d(image, self.discriminator_dim, scope="d_h0_conv"))
             h1 = lrelu(batch_norm(conv2d(h0, self.discriminator_dim * 2, scope="d_h1_conv"),
                                   is_training, scope="d_bn_1"))
@@ -163,16 +163,16 @@ class UNet(object):
             return tf.nn.sigmoid(fc1), fc1, fc2
 
     def build_model(self, is_training=True, inst_norm=False, no_target_source=False):
-        real_data = tf.placeholder(tf.float32,
+        real_data = tf.compat.v1.placeholder(tf.float32,
                                    [None, self.input_width, self.input_width,
                                     self.input_filters + self.output_filters],
                                    name='real_A_and_B_images')
-        embedding_ids = tf.placeholder(tf.int64, shape=None, name="embedding_ids")
-        no_target_data = tf.placeholder(tf.float32,
+        embedding_ids = tf.compat.v1.placeholder(tf.int64, shape=None, name="embedding_ids")
+        no_target_data = tf.compat.v1.placeholder(tf.float32,
                                         [None, self.input_width, self.input_width,
                                          self.input_filters + self.output_filters],
                                         name='no_target_A_and_B_images')
-        no_target_ids = tf.placeholder(tf.int64, shape=None, name="no_target_embedding_ids")
+        no_target_ids = tf.compat.v1.placeholder(tf.int64, shape=None, name="no_target_embedding_ids")
 
         # target images
         real_B = real_data[:, :, :, :self.input_filters]
@@ -195,31 +195,31 @@ class UNet(object):
         # this loss assume that generated imaged and real image
         # should reside in the same space and close to each other
         encoded_fake_B = self.encoder(fake_B, is_training, reuse=True)[0]
-        const_loss = (tf.reduce_mean(tf.square(encoded_real_A - encoded_fake_B))) * self.Lconst_penalty
+        const_loss = (tf.reduce_mean(input_tensor=tf.square(encoded_real_A - encoded_fake_B))) * self.Lconst_penalty
 
         # category loss
         true_labels = tf.reshape(tf.one_hot(indices=embedding_ids, depth=self.embedding_num),
                                  shape=[-1, self.embedding_num])
-        real_category_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=real_category_logits,
+        real_category_loss = tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=real_category_logits,
                                                                                     labels=true_labels))
-        fake_category_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_category_logits,
+        fake_category_loss = tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_category_logits,
                                                                                     labels=true_labels))
         category_loss = self.Lcategory_penalty * (real_category_loss + fake_category_loss)
 
         # binary real/fake loss
-        d_loss_real = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=real_D_logits,
+        d_loss_real = tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=real_D_logits,
                                                                              labels=tf.ones_like(real_D)))
-        d_loss_fake = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_D_logits,
+        d_loss_fake = tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_D_logits,
                                                                              labels=tf.zeros_like(fake_D)))
         # L1 loss between real and generated images
-        l1_loss = self.L1_penalty * tf.reduce_mean(tf.abs(fake_B - real_B))
+        l1_loss = self.L1_penalty * tf.reduce_mean(input_tensor=tf.abs(fake_B - real_B))
         # total variation loss
         width = self.output_width
         tv_loss = (tf.nn.l2_loss(fake_B[:, 1:, :, :] - fake_B[:, :width - 1, :, :]) / width
                    + tf.nn.l2_loss(fake_B[:, :, 1:, :] - fake_B[:, :, :width - 1, :]) / width) * self.Ltv_penalty
 
         # maximize the chance generator fool the discriminator
-        cheat_loss = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_D_logits,
+        cheat_loss = tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=fake_D_logits,
                                                                             labels=tf.ones_like(fake_D)))
 
         d_loss = d_loss_real + d_loss_fake + category_loss / 2.0
@@ -242,35 +242,35 @@ class UNet(object):
                                                                                             reuse=True)
             encoded_no_target_B = self.encoder(no_target_B, is_training, reuse=True)[0]
             no_target_const_loss = tf.reduce_mean(
-                tf.square(encoded_no_target_A - encoded_no_target_B)) * self.Lconst_penalty
+                input_tensor=tf.square(encoded_no_target_A - encoded_no_target_B)) * self.Lconst_penalty
             no_target_category_loss = tf.reduce_mean(
-                tf.nn.sigmoid_cross_entropy_with_logits(logits=no_target_category_logits,
+                input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=no_target_category_logits,
                                                         labels=no_target_labels)) * self.Lcategory_penalty
 
-            d_loss_no_target = tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=no_target_D_logits,
+            d_loss_no_target = tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=no_target_D_logits,
                                                                                       labels=tf.zeros_like(
                                                                                           no_target_D)))
-            cheat_loss += tf.reduce_mean(tf.nn.sigmoid_cross_entropy_with_logits(logits=no_target_D_logits,
+            cheat_loss += tf.reduce_mean(input_tensor=tf.nn.sigmoid_cross_entropy_with_logits(logits=no_target_D_logits,
                                                                                  labels=tf.ones_like(no_target_D)))
             d_loss = d_loss_real + d_loss_fake + d_loss_no_target + (category_loss + no_target_category_loss) / 3.0
             g_loss = cheat_loss / 2.0 + l1_loss + \
                      (self.Lcategory_penalty * fake_category_loss + no_target_category_loss) / 2.0 + \
                      (const_loss + no_target_const_loss) / 2.0 + tv_loss
 
-        d_loss_real_summary = tf.summary.scalar("d_loss_real", d_loss_real)
-        d_loss_fake_summary = tf.summary.scalar("d_loss_fake", d_loss_fake)
-        category_loss_summary = tf.summary.scalar("category_loss", category_loss)
-        cheat_loss_summary = tf.summary.scalar("cheat_loss", cheat_loss)
-        l1_loss_summary = tf.summary.scalar("l1_loss", l1_loss)
-        fake_category_loss_summary = tf.summary.scalar("fake_category_loss", fake_category_loss)
-        const_loss_summary = tf.summary.scalar("const_loss", const_loss)
-        d_loss_summary = tf.summary.scalar("d_loss", d_loss)
-        g_loss_summary = tf.summary.scalar("g_loss", g_loss)
-        tv_loss_summary = tf.summary.scalar("tv_loss", tv_loss)
+        d_loss_real_summary = tf.compat.v1.summary.scalar("d_loss_real", d_loss_real)
+        d_loss_fake_summary = tf.compat.v1.summary.scalar("d_loss_fake", d_loss_fake)
+        category_loss_summary = tf.compat.v1.summary.scalar("category_loss", category_loss)
+        cheat_loss_summary = tf.compat.v1.summary.scalar("cheat_loss", cheat_loss)
+        l1_loss_summary = tf.compat.v1.summary.scalar("l1_loss", l1_loss)
+        fake_category_loss_summary = tf.compat.v1.summary.scalar("fake_category_loss", fake_category_loss)
+        const_loss_summary = tf.compat.v1.summary.scalar("const_loss", const_loss)
+        d_loss_summary = tf.compat.v1.summary.scalar("d_loss", d_loss)
+        g_loss_summary = tf.compat.v1.summary.scalar("g_loss", g_loss)
+        tv_loss_summary = tf.compat.v1.summary.scalar("tv_loss", tv_loss)
 
-        d_merged_summary = tf.summary.merge([d_loss_real_summary, d_loss_fake_summary,
+        d_merged_summary = tf.compat.v1.summary.merge([d_loss_real_summary, d_loss_fake_summary,
                                              category_loss_summary, d_loss_summary])
-        g_merged_summary = tf.summary.merge([cheat_loss_summary, l1_loss_summary,
+        g_merged_summary = tf.compat.v1.summary.merge([cheat_loss_summary, l1_loss_summary,
                                              fake_category_loss_summary,
                                              const_loss_summary,
                                              g_loss_summary, tv_loss_summary])
@@ -309,7 +309,7 @@ class UNet(object):
         self.sess = sess
 
     def retrieve_trainable_vars(self, freeze_encoder_decoder=False):
-        t_vars = tf.trainable_variables()
+        t_vars = tf.compat.v1.trainable_variables()
 
         d_vars = [var for var in t_vars if 'd_' in var.name]
         g_vars = [var for var in t_vars if 'g_' in var.name]
@@ -323,7 +323,7 @@ class UNet(object):
         return g_vars, d_vars
 
     def retrieve_generator_vars(self):
-        all_vars = tf.global_variables()
+        all_vars = tf.compat.v1.global_variables()
         generate_vars = [var for var in all_vars if 'embedding' in var.name or "g_" in var.name]
         return generate_vars
 
@@ -403,7 +403,7 @@ class UNet(object):
             os.makedirs(model_sample_dir)
 
         sample_img_path = os.path.join(model_sample_dir, "sample_%02d_%04d.png" % (epoch, step))
-        misc.imsave(sample_img_path, merged_pair)
+        imageio.imwrite(sample_img_path, merged_pair)
 
     def validate_model(self, val_iter, step, test_writer):
         print("Validating model..")
@@ -421,17 +421,17 @@ class UNet(object):
         d_loss = np.mean(d_losses)
         g_loss = np.mean(g_losses)
         l1_loss = np.mean(l1_losses)
-        test_writer.add_summary(tf.Summary(value=[
-            tf.Summary.Value(tag="d_loss", simple_value=d_loss),
-            tf.Summary.Value(tag="g_loss", simple_value=g_loss),
-            tf.Summary.Value(tag="l1_loss", simple_value=l1_loss)
+        test_writer.add_summary(tf.compat.v1.Summary(value=[
+            tf.compat.v1.Summary.Value(tag="d_loss", simple_value=d_loss),
+            tf.compat.v1.Summary.Value(tag="g_loss", simple_value=g_loss),
+            tf.compat.v1.Summary.Value(tag="l1_loss", simple_value=l1_loss)
         ]), step)
 
     def export_generator(self, save_dir, model_dir, model_name="gen_model"):
-        saver = tf.train.Saver()
+        saver = tf.compat.v1.train.Saver()
         self.restore_model(saver, model_dir)
 
-        gen_saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
+        gen_saver = tf.compat.v1.train.Saver(var_list=self.retrieve_generator_vars())
         gen_saver.save(self.sess, os.path.join(save_dir, model_name), global_step=0)
 
     def infer(self, source_obj, embedding_ids, model_dir, save_dir):
@@ -464,13 +464,13 @@ class UNet(object):
             save_imgs(batch_buffer, count, save_dir)
 
     def load_model(self, model_dir):
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
+        tf.compat.v1.global_variables_initializer().run()
+        saver = tf.compat.v1.train.Saver(var_list=self.retrieve_generator_vars())
         self.restore_model(saver, model_dir)
 
     def interpolate(self, source_obj, between, model_dir, save_dir, steps):
-        tf.global_variables_initializer().run()
-        saver = tf.train.Saver(var_list=self.retrieve_generator_vars())
+        tf.compat.v1.global_variables_initializer().run()
+        saver = tf.compat.v1.train.Saver(var_list=self.retrieve_generator_vars())
         self.restore_model(saver, model_dir)
         # new interpolated dimension
         new_x_dim = steps + 1
@@ -499,7 +499,7 @@ class UNet(object):
                 return True
             return False
 
-        embedding_vars = filter(filter_embedding_vars, tf.trainable_variables())
+        embedding_vars = filter(filter_embedding_vars, tf.compat.v1.trainable_variables())
         # here comes the hack, we overwrite the original tensor
         # with interpolated ones. Note, the shape might differ
 
@@ -509,7 +509,7 @@ class UNet(object):
             val = e_var.eval(session=self.sess)
             embedding_snapshot.append((e_var, val))
             t = _interpolate_tensor(val)
-            op = tf.assign(e_var, t, validate_shape=False)
+            op = tf.compat.v1.assign(e_var, t, validate_shape=False)
             print("overwrite %s tensor" % e_var.name, "old_shape ->", e_var.get_shape(), "new shape ->", t.shape)
             self.sess.run(op)
 
@@ -538,7 +538,7 @@ class UNet(object):
         # restore the embedding variables
         print("restore embedding values")
         for var, val in embedding_snapshot:
-            op = tf.assign(var, val, validate_shape=False)
+            op = tf.compat.v1.assign(var, val, validate_shape=False)
             self.sess.run(op)
 
     def train(self, lr=0.0002, epoch=100, schedule=10, resume=True, resume_pre_model=True, flip_labels=False,
@@ -549,21 +549,21 @@ class UNet(object):
         if not self.sess:
             raise Exception("no session registered")
 
-        learning_rate = tf.placeholder(tf.float32, name="learning_rate")
+        learning_rate = tf.compat.v1.placeholder(tf.float32, name="learning_rate")
 
         if optimizer.lower() == "adam":
-            _d_optimizier = tf.train.AdamOptimizer(learning_rate, beta1=0.5)
-            _g_optimizer = tf.train.AdamOptimizer(learning_rate, beta1=0.5)
+            _d_optimizier = tf.compat.v1.train.AdamOptimizer(learning_rate, beta1=0.5)
+            _g_optimizer = tf.compat.v1.train.AdamOptimizer(learning_rate, beta1=0.5)
         elif optimizer.lower() == "sgd":
-            _d_optimizier = tf.train.GradientDescentOptimizer(learning_rate)
-            _g_optimizer = tf.train.GradientDescentOptimizer(learning_rate)
+            _d_optimizier = tf.compat.v1.train.GradientDescentOptimizer(learning_rate)
+            _g_optimizer = tf.compat.v1.train.GradientDescentOptimizer(learning_rate)
         else:
             raise ValueError("Unknown optimizer: %s" % optimizer)
 
         d_optimizer = _d_optimizier.minimize(loss_handle.d_loss, var_list=d_vars)
         g_optimizer = _g_optimizer.minimize(loss_handle.g_loss, var_list=g_vars)
 
-        self.sess.run(tf.global_variables_initializer())
+        self.sess.run(tf.compat.v1.global_variables_initializer())
         real_data = input_handle.real_data
         embedding_ids = input_handle.embedding_ids
         no_target_data = input_handle.no_target_data
@@ -574,16 +574,16 @@ class UNet(object):
         total_batches = data_provider.compute_total_batch_num(self.batch_size)
         val_batch_iter = data_provider.get_val_iter(self.batch_size)
 
-        saver = tf.train.Saver(max_to_keep=3)
-        train_writer = tf.summary.FileWriter(self.log_dir + '/train', self.sess.graph)
-        test_writer = tf.summary.FileWriter(self.log_dir + '/test', self.sess.graph)
+        saver = tf.compat.v1.train.Saver(max_to_keep=3)
+        train_writer = tf.compat.v1.summary.FileWriter(self.log_dir + '/train', self.sess.graph)
+        test_writer = tf.compat.v1.summary.FileWriter(self.log_dir + '/test', self.sess.graph)
 
         if resume:
             _, model_dir = self.get_model_id_and_dir()
             self.restore_model(saver, model_dir)
 
         if resume_pre_model:
-            pre_saver = tf.train.Saver(g_vars)
+            pre_saver = tf.compat.v1.train.Saver(g_vars)
             _, pre_model_dir = self.get_model_id_and_dir()
             self.restore_pre_model(pre_saver, pre_model_dir)
             print("resume the pre-trained model.....")

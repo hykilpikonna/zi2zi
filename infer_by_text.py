@@ -39,12 +39,12 @@ args = parser.parse_args()
 
 
 def main(_):
-    config = tf.ConfigProto()
+    config = tf.compat.v1.ConfigProto()
     config.gpu_options.allow_growth = True
 
     src_font = ImageFont.truetype(args.src_font, size=args.char_size)
 
-    with tf.Session(config=config) as sess:
+    with tf.compat.v1.Session(config=config) as sess:
         model = UNet(batch_size=args.batch_size, input_width=args.canvas_size, output_width=args.canvas_size,
                      experiment_id=args.experiment_id, embedding_dim=args.embedding_dim)
         model.register_session(sess)
@@ -83,4 +83,4 @@ def main(_):
 
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()

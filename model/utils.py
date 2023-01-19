@@ -6,7 +6,7 @@ from io import BytesIO
 
 import imageio
 import numpy as np
-import scipy.misc as misc
+from skimage.transform import resize
 
 
 def pad_seq(seq, batch_size):
@@ -32,7 +32,7 @@ def normalize_image(img):
 
 
 def read_split_image(img):
-    mat = misc.imread(img, flatten=True).astype(np.float32)
+    mat = imageio.v3.imread(img, mode="L").astype(np.float32)
     side = int(mat.shape[1] / 2)
     assert side * 2 == mat.shape[1]
     img_A = mat[:, :side]  # target
@@ -42,7 +42,7 @@ def read_split_image(img):
 
 def shift_and_resize_image(img, shift_x, shift_y, nw, nh):
     w, h = img.shape
-    enlarged = misc.imresize(img, [nw, nh])
+    enlarged = resize(img, [nw, nh])
     return enlarged[shift_x:shift_x + w, shift_y:shift_y + h]
 
 

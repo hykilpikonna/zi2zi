@@ -35,7 +35,7 @@ def main(_):
     config = tf.ConfigProto()
     config.gpu_options.allow_growth = True
 
-    with tf.Session(config=config) as sess:
+    with tf.compat.v1.Session(config=config) as sess:
         model = UNet(batch_size=args.batch_size)
         model.register_session(sess)
         model.build_model(is_training=False, inst_norm=args.inst_norm)
@@ -64,4 +64,4 @@ def main(_):
 
 
 if __name__ == '__main__':
-    tf.app.run()
+    tf.compat.v1.app.run()
